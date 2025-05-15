@@ -1,11 +1,14 @@
+import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
+import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/SettingProvider.dart';
 import 'LogIn_Screen.dart';
 
 class Home_Screen extends StatefulWidget {
@@ -15,13 +18,12 @@ class Home_Screen extends StatefulWidget {
 
 class _Home_ScreenState extends State<Home_Screen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Khởi tạo instance của FirebaseAuth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  // Hàm hiển thị dialog thông báo tùy chỉnh
   void _showCustomAlertDialog({
     required BuildContext context,
     required String title,
@@ -32,18 +34,24 @@ class _Home_ScreenState extends State<Home_Screen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          content: Text(content),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ).animate()
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              title: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Text(content),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            )
+            .animate()
             .fade(duration: 300.ms)
             .scale(duration: 300.ms, alignment: Alignment.center);
       },
@@ -54,15 +62,19 @@ class _Home_ScreenState extends State<Home_Screen> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final formattedDate = DateFormat('dd/MM/yyyy').format(now);
+    final settings = Provider.of<SettingProvider>(context);
 
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text(''),
+        title: const Text('Trang chủ'),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: _openDrawer,
         ),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -75,7 +87,6 @@ class _Home_ScreenState extends State<Home_Screen> {
             ),
           ),
         ],
-        backgroundColor: Colors.lightBlueAccent,
         elevation: 0,
       ),
       drawer: Drawer(
@@ -84,9 +95,16 @@ class _Home_ScreenState extends State<Home_Screen> {
           children: <Widget>[
             Container(
               decoration: BoxDecoration(
-                color: Colors.blue.shade100.withOpacity(0.7), // Màu nền nhạt
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withOpacity(0.7),
               ),
-              padding: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 16),
+              padding: const EdgeInsets.only(
+                top: 24,
+                left: 16,
+                right: 16,
+                bottom: 16,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -95,7 +113,9 @@ class _Home_ScreenState extends State<Home_Screen> {
                     children: [
                       const CircleAvatar(
                         radius: 30,
-                        backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                        backgroundImage: NetworkImage(
+                          'https://via.placeholder.com/150',
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
@@ -116,32 +136,31 @@ class _Home_ScreenState extends State<Home_Screen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Ngày vào làm: --/--/----', // Placeholder cho ngày
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
+                    'Ngày vào làm: --/--/----',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.person_outline, color: Colors.redAccent),
-              title: const Text('Thông tin cá nhân', style: TextStyle(fontWeight: FontWeight.w500)),
+              leading: const Icon(
+                Icons.person_outline,
+                color: Colors.redAccent,
+              ),
+              title: const Text(
+                'Thông tin cá nhân',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               onTap: () {
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: const Icon(Icons.lock_outline, color: Colors.blue),
-              title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.w500)),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_today_outlined, color: Colors.green),
-              title: const Text('Lịch làm việc', style: TextStyle(fontWeight: FontWeight.w500)),
+              title: const Text(
+                'Đổi mật khẩu',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               onTap: () {
                 Navigator.pop(context);
               },
@@ -151,16 +170,17 @@ class _Home_ScreenState extends State<Home_Screen> {
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 onPressed: () async {
-                  // Hiển thị dialog xác nhận đăng xuất
-                  bool? confirmLogout = await _showLogoutConfirmationDialog(context);
+                  bool? confirmLogout = await _showLogoutConfirmationDialog(
+                    context,
+                  );
                   if (confirmLogout == true) {
-                    // Thực hiện đăng xuất Firebase
                     try {
                       await _auth.signOut();
-                      // Chuyển về màn hình đăng nhập và xóa lịch sử trang
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const LogIn_Screen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LogIn_Screen(),
+                        ),
                       );
                     } catch (e) {
                       _showCustomAlertDialog(
@@ -175,10 +195,15 @@ class _Home_ScreenState extends State<Home_Screen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade300,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text('Đăng xuất', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Đăng xuất',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -189,14 +214,14 @@ class _Home_ScreenState extends State<Home_Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
+            Text(
               'Xin chào, Nguyễn Văn A',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               'Ngày: $formattedDate',
-              style: const TextStyle(fontSize: 16),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),
             GridView.count(
@@ -212,26 +237,34 @@ class _Home_ScreenState extends State<Home_Screen> {
                   label: 'Gọi món',
                   backgroundColor: Colors.green.shade100,
                   iconColor: Colors.green.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Gọi món
-                  },
+                  onPressed: () {},
                 ),
                 _buildDashboardIconButton(
                   icon: Icons.payment,
                   label: 'Thanh toán',
                   backgroundColor: Colors.blue.shade100,
                   iconColor: Colors.blue.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Thanh toán
-                  },
+                  onPressed: () {},
                 ),
                 _buildDashboardIconButton(
                   icon: Icons.bar_chart,
                   label: 'Báo cáo',
                   backgroundColor: Colors.orange.shade100,
                   iconColor: Colors.orange.shade700,
+                  onPressed: () {},
+                ),
+                _buildDashboardIconButton(
+                  icon: Icons.bar_chart,
+                  label: 'Nhân sự',
+                  backgroundColor: Colors.orange.shade100,
+                  iconColor: Colors.orange.shade700,
                   onPressed: () {
-                    // Xử lý khi nhấn Báo cáo
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NhanSuScreen(),
+                      ),
+                    );
                   },
                 ),
                 _buildDashboardIconButton(
@@ -240,15 +273,20 @@ class _Home_ScreenState extends State<Home_Screen> {
                   backgroundColor: Colors.grey.shade200,
                   iconColor: Colors.grey.shade700,
                   onPressed: () {
-                    // Xử lý khi nhấn Cài đặt
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingScreen(),
+                      ),
+                    );
                   },
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Thống Kê Hôm Nay',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
             Row(
@@ -258,11 +296,9 @@ class _Home_ScreenState extends State<Home_Screen> {
                     label: 'Đơn',
                     value: '2',
                     icon: Icons.list_alt_outlined,
-                    iconBackgroundColor: Colors.pink.shade100,
+                    iconBackgroundColor: Colors.pink.shade100.withOpacity(0.3),
                     iconColor: Colors.pink.shade700,
-                    onPressed: () {
-                      // Xử lý khi nhấn Đơn
-                    },
+                    onPressed: () {},
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -271,11 +307,11 @@ class _Home_ScreenState extends State<Home_Screen> {
                     label: 'Chi tiêu',
                     value: '50',
                     icon: Icons.attach_money_outlined,
-                    iconBackgroundColor: Colors.green.shade100,
-                    iconColor: Colors.green.shade700,
-                    onPressed: () {
-                      // Xử lý khi nhấn Chi tiêu
-                    },
+                    iconBackgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.3),
+                    iconColor: Theme.of(context).colorScheme.primary,
+                    onPressed: () {},
                   ),
                 ),
               ],
@@ -284,31 +320,45 @@ class _Home_ScreenState extends State<Home_Screen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Đơn hàng gần đây',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
                 TextButton(
-                  onPressed: () {
-                    // Xử lý khi nhấn Xem tất cả
-                  },
-                  child: const Text('Xem tất cả', style: TextStyle(color: Colors.blue)),
+                  onPressed: () {},
+                  child: Text(
+                    'Xem tất cả',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 200, // Đặt chiều cao cố định cho vùng chứa ListView
+              height: 200,
               child: ListView.separated(
-                shrinkWrap: true, // Cần thiết khi ListView nằm trong một cột có kích thước vô hạn (SingleChildScrollView)
-                physics: const ClampingScrollPhysics(), // Ngăn cuộn tràn viền
-                itemCount: 10, // Tăng số lượng item để thấy hiệu ứng cuộn
-                separatorBuilder: (BuildContext context, int index) => const Divider(),
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                itemCount: 10,
+                separatorBuilder:
+                    (BuildContext context, int index) => const Divider(),
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
-                    title: Text('Bàn ăn # ${index + 1}'),
-                    subtitle: Text('10:25 PM - ${index + 2} món'),
-                    trailing: _buildOrderStatusBadge(index % 3), // Sử dụng lại hàm tạo badge ngẫu nhiên
+                    title: Text(
+                      'Bàn ăn # ${index + 1}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '10:25 PM - ${index + 2} món',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    trailing: _buildOrderStatusBadge(index % 3),
                   );
                 },
               ),
@@ -318,35 +368,39 @@ class _Home_ScreenState extends State<Home_Screen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: GNav(
             gap: 8,
             padding: const EdgeInsets.all(16),
-            backgroundColor: Colors.white,
-            color: Colors.grey,
-            activeColor: Colors.blue,
-            tabBackgroundColor: Colors.blue.shade100,
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            backgroundColor:
+                Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(
+              0.6,
+            ),
+            activeColor:
+                Theme.of(
+                  context,
+                ).colorScheme.primary,
+            tabBackgroundColor: Theme.of(
+              context,
+            ).colorScheme.onPrimary.withOpacity(0.1),
+            textStyle: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             tabs: const [
+              GButton(icon: Icons.home_outlined, text: 'Trang chủ'),
+              GButton(icon: Icons.restaurant_menu, text: 'Gọi món'),
+              GButton(icon: Icons.payment_outlined, text: 'Thanh toán'),
               GButton(
-                icon: Icons.home_outlined,
-                text: 'Trang chủ',
-              ),
-              GButton(
-                icon: Icons.restaurant_menu,
-                text: 'Gọi món',
-              ),
-              GButton(
-                icon: Icons.payment_outlined,
-                text: 'Thanh toán',
+                icon: Icons.bar_chart,
+                text: 'Báo cáo',
               ),
             ],
             selectedIndex: 0,
             onTabChange: (index) {
-              setState(() {
-                // Cập nhật trạng thái
-              });
+              setState(() {});
               print('Đã chọn tab thứ $index');
             },
           ),
@@ -355,22 +409,21 @@ class _Home_ScreenState extends State<Home_Screen> {
     );
   }
 
-  // Hàm hiển thị dialog xác nhận đăng xuất
   Future<bool?> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog<bool>(
       context: context,
-      barrierDismissible: false, // Người dùng phải nhấn nút
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Xác nhận đăng xuất'),
           content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Trả về false khi nhấn Cancel
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // Trả về true khi nhấn OK
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text('OK'),
             ),
           ],
@@ -393,7 +446,7 @@ class _Home_ScreenState extends State<Home_Screen> {
       child: Container(
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -404,24 +457,27 @@ class _Home_ScreenState extends State<Home_Screen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: iconBackgroundColor,
                   radius: 12,
-                  child: Icon(
-                    icon,
-                    size: 16,
-                    color: iconColor,
-                  ),
+                  child: Icon(icon, size: 16, color: iconColor),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -450,47 +506,12 @@ class _Home_ScreenState extends State<Home_Screen> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.surface,
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatisticIconButton({
-    required String label,
-    required String value,
-    required IconData icon,
-    required Color backgroundColor,
-    required Color textColor,
-    required VoidCallback onPressed,
-  }) {
-    return Card(
-      color: backgroundColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                label,
-                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
-              ),
-              const SizedBox(height: 4),
-              Icon(icon, color: textColor),
-            ],
-          ),
         ),
       ),
     );
@@ -499,11 +520,26 @@ class _Home_ScreenState extends State<Home_Screen> {
   Widget _buildOrderStatusBadge(int index) {
     switch (index) {
       case 0:
-        return Chip(label: const Text('Đang phục vụ', style: TextStyle(color: Colors.white)), backgroundColor: Colors.orange);
+        return Chip(
+          label: const Text(
+            'Đang phục vụ',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.orange,
+        );
       case 1:
-        return Chip(label: const Text('Hoàn thành', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green);
+        return Chip(
+          label: const Text(
+            'Hoàn thành',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+        );
       case 2:
-        return Chip(label: const Text('Chờ xử lý', style: TextStyle(color: Colors.white)), backgroundColor: Colors.redAccent);
+        return Chip(
+          label: const Text('Chờ xử lý', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.redAccent,
+        );
       default:
         return const SizedBox.shrink();
     }
