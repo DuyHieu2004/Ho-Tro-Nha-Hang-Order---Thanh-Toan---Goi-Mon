@@ -1,17 +1,19 @@
 import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
+import 'package:doan_nhom_cuoiky/screens/ThongKeScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:provider/provider.dart';
 import '../providers/SettingProvider.dart';
 import 'LogIn_Screen.dart';
 
 class Home_Screen extends StatefulWidget {
+  const Home_Screen({super.key});
+
   @override
   _Home_ScreenState createState() => _Home_ScreenState();
 }
@@ -277,6 +279,20 @@ class _Home_ScreenState extends State<Home_Screen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const SettingScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardIconButton(
+                  icon: Icons.settings,
+                  label: 'Thống kê',
+                  backgroundColor: Colors.grey.shade200,
+                  iconColor: Colors.grey.shade700,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ThongKeScreen(),
                       ),
                     );
                   },

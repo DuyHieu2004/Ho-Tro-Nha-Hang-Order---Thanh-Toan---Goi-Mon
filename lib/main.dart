@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:doan_nhom_cuoiky/providers/NhanSuProvider.dart';
 import 'package:doan_nhom_cuoiky/providers/SettingProvider.dart';
+import 'package:doan_nhom_cuoiky/providers/HoaDonProvider.dart';
 import 'package:doan_nhom_cuoiky/screens/LogIn_Screen.dart';
 import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,6 +16,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingProvider()),
         ChangeNotifierProvider(create: (_) => NhanSuProvider()),
+        ChangeNotifierProvider(create: (_) => HoaDonProvider()),
       ],
       child: const MyApp(),
     ),

@@ -19,10 +19,6 @@ class NhanSuProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> refreshNhanSu() async {
-    await _loadNhanSu();
-  }
-
   List<NhanVien> get nhanSu => _nhanSu;
 
   Future<void> addNhanVien(NhanVien nhanVien) async {
