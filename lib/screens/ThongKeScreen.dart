@@ -142,6 +142,25 @@ class _ThongKeScreenState extends State<ThongKeScreen> with SingleTickerProvider
   }
 
   Widget _buildTheoNgayTab(HoaDonProvider hoaDonProvider) {
+    // Lấy danh sách các ngày có trong hóa đơn
+    final List<DateTime> availableDates = hoaDonProvider.hoaDons
+        .where((hoaDon) => hoaDon.ngayThanhToan != null)
+        .map((hoaDon) => DateTime(
+              hoaDon.ngayThanhToan!.year,
+              hoaDon.ngayThanhToan!.month,
+              hoaDon.ngayThanhToan!.day,
+            ))
+        .toSet()
+        .toList();
+    
+    // Sắp xếp các ngày theo thứ tự giảm dần
+    availableDates.sort((a, b) => b.compareTo(a));
+    
+    // Nếu không có ngày được chọn hoặc ngày được chọn không có trong danh sách
+    if (!availableDates.contains(selectedDate) && availableDates.isNotEmpty) {
+      selectedDate = availableDates.first;
+    }
+
     final doanhThuNgay = hoaDonProvider.getDoanhThuTheoNgay(selectedDate);
     final soLuongHoaDonNgay = hoaDonProvider.getSoLuongHoaDonTheoNgay(selectedDate);
     final hoaDonsNgay = hoaDonProvider.getHoaDonTheoNgay(selectedDate);
@@ -151,15 +170,27 @@ class _ThongKeScreenState extends State<ThongKeScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Chọn ngày
+          // Chọn ngày bằng ComboBox
           Row(
             children: [
               const Text('Chọn ngày:', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 16),
-              OutlinedButton.icon(
-                onPressed: () => _selectDate(context),
-                icon: const Icon(Icons.calendar_today),
-                label: Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+              Expanded(
+                child: DropdownButton<DateTime>(
+                  value: selectedDate,
+                  isExpanded: true,
+                  items: availableDates.map((date) => DropdownMenuItem<DateTime>(
+                    value: date,
+                    child: Text(DateFormat('dd/MM/yyyy').format(date)),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedDate = value;
+                      });
+                    }
+                  },
+                ),
               ),
             ],
           ),

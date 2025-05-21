@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:doan_nhom_cuoiky/models/NhanVien.dart';
 import 'package:doan_nhom_cuoiky/models/VaiTro.dart';
 import 'package:doan_nhom_cuoiky/providers/NhanSuProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class AddNhanSuScreen extends StatefulWidget {
   const AddNhanSuScreen({super.key});
@@ -14,7 +16,6 @@ class AddNhanSuScreen extends StatefulWidget {
 }
 
 class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
-  final NhanSuProvider _nhanSuPro = NhanSuProvider();
   TextEditingController ma = TextEditingController();
   TextEditingController ten = TextEditingController();
   TextEditingController sdt = TextEditingController();
@@ -25,7 +26,6 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
   TextEditingController anh = TextEditingController();
 
   final List<String> vaiTroOptions = ['Quản lý', 'Thu ngân', 'Phục vụ'];
-
   final _formKey = GlobalKey<FormState>();
   File? _image;
 
@@ -45,41 +45,78 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
   }
 
   Future<void> getImage() async {
-    await _requestPermission(); // Kiểm tra và yêu cầu quyền
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    await _requestPermission();
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
     if (image == null) return;
+
     final imageTemp = File(image.path);
     setState(() {
       _image = imageTemp;
-      anh.text = image.path; // Gán đường dẫn ảnh
+      anh.text = image.path; // Cập nhật đường dẫn ảnh
     });
   }
 
-  void addNhanSu() {
+  void addNhanSu() async {
     if (_formKey.currentState!.validate()) {
-      VaiTro vaiTro = VaiTro.fromString(
-        selectedVaiTro,
-      ); // Ánh xạ từ String sang VaiTro
-      NhanVien nv = NhanVien(
-        ma: ma.text,
-        ten: ten.text,
-        SDT: sdt.text,
-        CCCD: cccd.text,
-        tk: tk.text,
-        mk: mk.text,
-        vaiTro: vaiTro,
-        anh: anh.text.isNotEmpty ? anh.text : null, // Xử lý trường hợp ảnh rỗng
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
       );
+
       try {
-        _nhanSuPro.addNhanVien(nv);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thêm nhân viên thành công')),
+        final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
+        bool exists = await nhanSuProvider.checkNhanVienExists(ma.text);
+        if (exists) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mã nhân viên đã tồn tại'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        VaiTro vaiTro = VaiTro.fromString(selectedVaiTro);
+        NhanVien nv = NhanVien(
+          ma: ma.text,
+          ten: ten.text,
+          SDT: sdt.text,
+          CCCD: cccd.text,
+          tk: tk.text,
+          mk: mk.text,
+          vaiTro: vaiTro,
+          anh: anh.text.isNotEmpty ? anh.text : null,
         );
-        Navigator.pop(context); // Quay lại màn hình trước
+
+        await nhanSuProvider.addNhanVien(nv);
+        Navigator.pop(context); // Đóng dialog loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thêm nhân viên thành công'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Navigator.pop(context, true);
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi khi thêm: $e')));
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi thêm: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -100,7 +137,7 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,           
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   width: 100,
@@ -109,22 +146,21 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
                     color: Color(0xFFE6E1FA),
                     shape: BoxShape.circle,
                   ),
-                  child:
-                      _image == null
-                          ? Icon(
-                            Icons.person_outline,
-                            size: 50,
-                            color: Colors.indigo[800],
-                          )
-                          : ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: Image.file(
-                              _image!,
-                              width: 100,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
+                  child: _image == null
+                      ? Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: Colors.indigo[800],
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.file(
+                            _image!,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
                           ),
+                        ),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -254,13 +290,12 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  items:
-                      vaiTroOptions.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
+                  items: vaiTroOptions.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
                       selectedVaiTro = newValue!;
@@ -277,17 +312,24 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
                 Container(
                   width: 400,
                   child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                  ),                 
-                  onPressed: addNhanSu,
-                  child: const Text('Thêm nhân viên', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),),
+                    onPressed: addNhanSu,
+                    child: const Text(
+                      'Thêm nhân viên',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
-                )
               ],
             ),
           ),

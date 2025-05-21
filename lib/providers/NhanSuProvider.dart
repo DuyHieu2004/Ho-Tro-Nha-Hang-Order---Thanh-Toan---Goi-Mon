@@ -11,40 +11,29 @@ class NhanSuProvider extends ChangeNotifier {
   }
 
   Future<void> _loadNhanSu() async {
-    try {
-      _nhanSu = await _nhanSuService.getNhanSu();
-      notifyListeners();
-    } catch (e) {
-      print('Lỗi khi tải nhân sự: $e');
-    }
+    _nhanSu = await _nhanSuService.getNhanSu();
+    notifyListeners();
   }
 
   List<NhanVien> get nhanSu => _nhanSu;
 
   Future<void> addNhanVien(NhanVien nhanVien) async {
-    try {
-      await _nhanSuService.addNhanSu(nhanVien);
-      await _loadNhanSu();
-    } catch (e) {
-      print('Lỗi khi thêm nhân viên: $e');
-    }
+    await _nhanSuService.addNhanSu(nhanVien);
+    await _loadNhanSu(); // Làm mới danh sách sau khi thêm
   }
 
   Future<void> updateNhanVien(NhanVien nhanVien) async {
-    try {
-      await _nhanSuService.updateNhanSu(nhanVien);
-      await _loadNhanSu();
-    } catch (e) {
-      print('Lỗi khi cập nhật nhân viên: $e');
-    }
+    await _nhanSuService.updateNhanSu(nhanVien);
+    await _loadNhanSu(); // Làm mới danh sách sau khi sửa
   }
 
   Future<void> deleteNhanVien(String ma) async {
-    try {
-      await _nhanSuService.deleteNhanSu(ma);
-      await _loadNhanSu();
-    } catch (e) {
-      print('Lỗi khi xóa nhân viên: $e');
-    }
+    await _nhanSuService.deleteNhanSu(ma);
+    await _loadNhanSu();
+  }
+
+  Future<bool> checkNhanVienExists(String ma) async {
+    final snapshot = await _nhanSuService.getNhanSuByMa(ma);
+    return snapshot.isNotEmpty;
   }
 }

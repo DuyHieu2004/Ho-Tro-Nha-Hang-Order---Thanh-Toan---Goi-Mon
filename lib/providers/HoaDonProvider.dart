@@ -7,12 +7,12 @@ class HoaDonProvider extends ChangeNotifier {
   final HoaDonService _hoaDonService = HoaDonService();
 
   HoaDonProvider() {
-    loadHoaDon();
+    _loadHoaDon();
   }
   
   List<HoaDon> get hoaDons => _hoaDons;
 
-  Future<void> loadHoaDon() async {
+  Future<void> _loadHoaDon() async {
     _hoaDons = await _hoaDonService.getHoaDon();
     notifyListeners();
   }
@@ -20,7 +20,7 @@ class HoaDonProvider extends ChangeNotifier {
   Future<void> addHoaDon(HoaDon hoaDon) async {
     await _hoaDonService.addHoaDon(hoaDon);
     _hoaDons.add(hoaDon);
-    loadHoaDon();
+    _loadHoaDon();
   }
 
   Future<void> updateHoaDon(HoaDon hoaDon) async {
@@ -29,13 +29,13 @@ class HoaDonProvider extends ChangeNotifier {
     if (index != -1) {
       _hoaDons[index] = hoaDon;
     }
-    loadHoaDon();
+    _loadHoaDon();
   }
 
   Future<void> deleteHoaDon(String id) async {
     await _hoaDonService.deleteHoaDon(id);
     _hoaDons.removeWhere((element) => element.ma == id);
-    loadHoaDon();
+    _loadHoaDon();
   }
   
   // Phương thức lấy tổng doanh thu
@@ -150,4 +150,5 @@ class HoaDonProvider extends ChangeNotifier {
     if (_hoaDons.isEmpty) return 0;
     return getTongDoanhThu() / _hoaDons.length;
   }
+  
 }

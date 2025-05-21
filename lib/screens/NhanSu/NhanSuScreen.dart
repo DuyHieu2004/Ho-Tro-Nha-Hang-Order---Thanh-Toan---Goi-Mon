@@ -1,9 +1,10 @@
 import 'package:doan_nhom_cuoiky/models/NhanVien.dart';
 import 'package:doan_nhom_cuoiky/providers/NhanSuProvider.dart';
 import 'package:doan_nhom_cuoiky/screens/NhanSu/AddNhanSuScreen.dart';
-import 'package:doan_nhom_cuoiky/screens/NhanSu/ChiTietNhanSuScreen.dart';
+import 'package:doan_nhom_cuoiky/screens/NhanSu/DetailNhanSuScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:doan_nhom_cuoiky/main.dart';
 
 class NhanSuScreen extends StatefulWidget {
   const NhanSuScreen({super.key});
@@ -14,29 +15,47 @@ class NhanSuScreen extends StatefulWidget {
 
 class _NhanSuScreenState extends State<NhanSuScreen> {
   List<NhanVien> nhanViens = [];
-  final NhanSuProvider _nhanSuPro = NhanSuProvider();
   TextEditingController search = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadNhanSu();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadNhanSu();
+    });
   }
 
   Future<void> _loadNhanSu() async {
     setState(() {
-      nhanViens = _nhanSuPro.nhanSu;
+      _isLoading = true;
+    });
+    
+    final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
+    
+    setState(() {
+      nhanViens = nhanSuProvider.nhanSu;
+      _isLoading = false;
     });
   }
 
   void _searchList() {
     setState(() {
       if (search.text.isNotEmpty) {
-        nhanViens = _nhanSuPro.nhanSu.where((element) =>
-            element.ma!.toLowerCase().contains(search.text.toLowerCase()) ||
-            element.ten!.toLowerCase().contains(search.text.toLowerCase())).toList();
+        nhanViens =
+            nhanViens
+                .where(
+                  (element) =>
+                      element.ma!.toLowerCase().contains(
+                        search.text.toLowerCase(),
+                      ) ||
+                      element.ten!.toLowerCase().contains(
+                        search.text.toLowerCase(),
+                      ),
+                )
+                .toList();
       } else {
-        nhanViens = _nhanSuPro.nhanSu;
+        _loadNhanSu();
       }
     });
   }
@@ -58,71 +77,106 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Nhân sự", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-        centerTitle: true,
-        leading: IconButton(onPressed: (){
-          Navigator.pop(context);
-        }, icon: Icon(Icons.arrow_back)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddNhanSuScreen()),
-              );
-              _loadNhanSu();
-            },
-            icon: const Icon(Icons.add_sharp),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-        child: Column(
-          children: [
-            TextField(
-              controller: search,
-              decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                hintText: "Tìm kiếm nhân viên",
-                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-              ),
-              onChanged: (value) => _searchList(),
+    return Consumer<NhanSuProvider>(
+      builder: (context, nhanSuProvider, child) {
+        if (nhanViens.isEmpty && nhanSuProvider.nhanSu.isNotEmpty) {
+          nhanViens = nhanSuProvider.nhanSu;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "Nhân sự",
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Danh sách nhân sự",
-                  style: Theme.of(context).textTheme.titleMedium,
+            centerTitle: true,
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(Icons.arrow_back),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            actions: [
+              IconButton(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddNhanSuScreen(),
+                    ),
+                  );
+                  if (result == true) {
+                    _loadNhanSu();
+                  }
+                },
+                icon: Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
-                IconButton(
-                  onPressed: _sortList,
-                  icon: Icon(
-                    _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                    color: Theme.of(context).colorScheme.onSurface
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            child: Column(
+              children: [
+                TextField(
+                  controller: search,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    hintText: "Tìm kiếm nhân viên",
+                    hintStyle: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
-                  tooltip: _sortAscending ? 'Sắp xếp A-Z' : 'Sắp xếp Z-A',
+                  onChanged: (value) => _searchList(),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Danh sách nhân sự",
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    IconButton(
+                      onPressed: _sortList,
+                      icon: Icon(
+                        _sortAscending
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      tooltip: _sortAscending ? 'Sắp xếp A-Z' : 'Sắp xếp Z-A',
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child:
+                      nhanViens.isEmpty
+                          ? Center(child: Text('Không có nhân viên nào'))
+                          : ListView.builder(
+                            itemCount: nhanViens.length,
+                            itemBuilder:
+                                (context, index) => NhanSuItemCard(
+                                  nv: nhanViens[index],
+                                  onRefresh: _loadNhanSu,
+                                ),
+                          ),
                 ),
               ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: nhanViens.length,
-                itemBuilder: (context, index) => NhanSuItemCard(
-                  nv: nhanViens[index],
-                  onRefresh: _loadNhanSu,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -130,30 +184,40 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
 class NhanSuItemCard extends StatelessWidget {
   final NhanVien? nv;
   final VoidCallback onRefresh;
-  NhanSuItemCard({super.key, required this.nv, required this.onRefresh});
+  const NhanSuItemCard({super.key, required this.nv, required this.onRefresh});
 
   void _showDetailDialog(BuildContext context) {
+    if (nv == null) return;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Thông tin nhân viên'),
+          title: const Text('Thông tin nhân viên'),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(nv!.anh ?? 'https://via.placeholder.com/150'),
+                Center(
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage:
+                        const AssetImage('assets/images/default.png')
+                            as ImageProvider,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                _buildInfoRow(context,'Mã nhân viên:', nv!.ma!),
-                _buildInfoRow(context,'Họ và tên:', nv!.ten!),
-                _buildInfoRow(context,'Số điện thoại:', nv!.SDT!),
-                _buildInfoRow(context,'CCCD:', nv!.CCCD!),
-                _buildInfoRow(context,'Tài khoản:', nv!.tk!),
-                _buildInfoRow(context,'Vai trò:', nv!.vaiTro!.toString()),
+                _buildInfoRow(context, 'Mã nhân viên:', nv?.ma ?? 'Không có'),
+                _buildInfoRow(context, 'Họ và tên:', nv?.ten ?? 'Không có'),
+                _buildInfoRow(context, 'Số điện thoại:', nv?.SDT ?? 'Không có'),
+                _buildInfoRow(context, 'CCCD:', nv?.CCCD ?? 'Không có'),
+                _buildInfoRow(context, 'Tài khoản:', nv?.tk ?? 'Không có'),
+                _buildInfoRow(
+                  context,
+                  'Vai trò:',
+                  nv?.vaiTro?.toString() ?? 'Không có',
+                ),
               ],
             ),
           ),
@@ -164,31 +228,58 @@ class NhanSuItemCard extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
+                if (nv?.ma == null) return;
+
+                // Hiển thị loading
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                );
+
+                final nhanSuProvider = Provider.of<NhanSuProvider>(
+                  context,
+                  listen: false,
+                );
                 try {
                   await nhanSuProvider.deleteNhanVien(nv!.ma!);
-                  Navigator.pop(context);
-                  onRefresh();
+                  Navigator.pop(context); // Đóng loading
+                  Navigator.pop(context); // Đóng dialog chi tiết
+                  onRefresh(); // Refresh danh sách
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Xóa thành công')),
+                    const SnackBar(
+                      content: Text('Xóa thành công'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 } catch (e) {
+                  Navigator.pop(context); // Đóng loading
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi khi xóa: $e')),
+                    SnackBar(
+                      content: Text('Lỗi khi xóa: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               },
               child: const Text('Xóa', style: TextStyle(color: Colors.red)),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                if (nv?.ma == null) return;
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChiTietNhanSuScreen(nhanVien: nv!)),
+                  MaterialPageRoute(
+                    builder: (context) => DetailNhanSu(nhanVien: nv!),
+                  ),
                 ).then((_) => onRefresh());
-                Navigator.pop(context);
               },
-              child: const Text('Chỉnh sửa'),
+              child: const Text(
+                'Chỉnh sửa',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -196,7 +287,7 @@ class NhanSuItemCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(BuildContext context,String label, String value) {
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -204,11 +295,17 @@ class NhanSuItemCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(value, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+            child: Text(
+              value,
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+            ),
           ),
         ],
       ),
@@ -217,6 +314,11 @@ class NhanSuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Kiểm tra nếu nv là null thì trả về một widget trống
+    if (nv == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(5)),
@@ -230,22 +332,39 @@ class NhanSuItemCard extends StatelessWidget {
       child: ListTile(
         onTap: () => _showDetailDialog(context),
         leading: CircleAvatar(
-          backgroundImage: NetworkImage(nv!.anh ?? 'https://via.placeholder.com/150'),
+          backgroundImage:
+              const AssetImage('assets/images/default.png') as ImageProvider,
         ),
         title: Text(
-          nv!.ten!,
+          nv?.ten ?? 'Không có tên',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        subtitle: Text(
+          nv?.vaiTro.toString() ?? '',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
-        trailing: IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ChiTietNhanSuScreen(nhanVien: nv!)),
-            ).then((_) => onRefresh());
-          },
-          icon: Icon(Icons.more_horiz_outlined, color: Theme.of(context).colorScheme.onSurface),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () {
+                if (nv == null) return;
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailNhanSu(nhanVien: nv!),
+                  ),
+                ).then((_) => onRefresh());
+              },
+              icon: Icon(
+                Icons.more_horiz_outlined,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
       ),
     );
