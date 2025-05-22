@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doan_nhom_cuoiky/models/VaiTro.dart';
 
 class NhanVien {
+  String? id;
   String? _ma;
   String? _ten;
   String? _SDT;
@@ -9,9 +11,10 @@ class NhanVien {
   String? _mk;
   VaiTro? _vaiTro;
   String? _anh;
-
+  Timestamp? ngayVL;
   // Constructors
   NhanVien({
+    required String? id,
     required String? ma,
     required String? ten,
     required String? SDT,
@@ -20,6 +23,7 @@ class NhanVien {
     required String? mk,
     required VaiTro? vaiTro,
     required String? anh,
+    this.ngayVL
   }) : _ma = ma,
        _ten = ten,
        _SDT = SDT,
@@ -39,21 +43,25 @@ class NhanVien {
     _mk = map['mk'];
     _vaiTro = map['vaiTro'] != null ? VaiTro.fromMap(map['vaiTro']) : null;
     _anh = map['anh'];
+    ngayVL: map['NgayVL'] as Timestamp?;
   }
 
   // toMap method
   Map<String, dynamic> toMap() {
     return {
-      'ma': _ma,
-      'ten': _ten,
-      'SDT': _SDT,
-      'CCCD': _CCCD,
-      'tk': _tk,
-      'mk': _mk,
-      'vaiTro': _vaiTro?.toMap(),
-      'anh': _anh,
+      'Ma': ma,
+      'Ten': ten,
+      'Anh': anh,
+      'CCCD': CCCD,
+      'VaiTro': vaiTro,
+      'MatKhau': mk,
+      'SDT': SDT,
+      'TaiKhoan': tk,
+      'NgayVL': ngayVL,
     };
   }
+
+  bool get isQuanLy => vaiTro == 'QL';
 
   // Getters
   String? get ma => _ma;

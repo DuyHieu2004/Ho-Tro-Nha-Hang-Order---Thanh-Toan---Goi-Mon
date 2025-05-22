@@ -3,6 +3,8 @@ import 'package:flutter/animation.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import thư viện Firebase Auth
 import 'package:firebase_core/firebase_core.dart';
 
+import '../models/NhanVien.dart';
+import '../services/Auth_Service.dart';
 import '../widgets/CustomAlertDialog.dart';
 import 'Home_Screen.dart'; // Import thư viện Firebase Core
 // Import file cấu hình Firebase của bạn
@@ -137,7 +139,7 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
         //   context,
         //   MaterialPageRoute(builder: (context) => HomePage()), // Thay HomePage bằng trang chính của bạn
         // );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen(),));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen1(),));
       }
     } on FirebaseAuthException catch (e) {
       // Đóng dialog trước khi hiển thị lỗi
@@ -310,7 +312,8 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           // Gọi hàm xử lý đăng nhập Firebase
-                          _signInWithEmailAndPassword(context);
+                          //_signInWithEmailAndPassword(context);
+                          _login();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -332,13 +335,7 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
                       ),
                     ),
                     const SizedBox(height: 16.0),
-                    // Các tùy chọn khác (ví dụ: Quên mật khẩu) - tùy chọn
-                    // TextButton(
-                    //   onPressed: () {
-                    //     // Xử lý quên mật khẩu
-                    //   },
-                    //   child: const Text('Quên mật khẩu?', style: TextStyle(color: Color(0xFF558B2F))),
-                    // ),
+
                   ],
                 ),
               ),
@@ -347,5 +344,33 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
         ],
       ),
     );
+  }
+
+  final Auth_Service _authService = Auth_Service();
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      String email = _usernameController.text.trim();
+      String password = _passwordController.text.trim();
+
+      NhanVien? loggedInNhanVien = await _authService
+          .signInWithEmailAndPassword(email, password);
+
+      if (loggedInNhanVien != null) {
+        // Đăng nhập thành công, bạn có thể chuyển sang màn hình Home_Screen
+        // và truyền đối tượng loggedInNhanVien nếu cần
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => Home_Screen1(nhanVien: loggedInNhanVien)),
+        );
+      } else {
+        // Hiển thị thông báo lỗi đăng nhập
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(
+              'Đăng nhập không thành công. Vui lòng kiểm tra email và mật khẩu.')),
+        );
+      }
+    }
   }
 }
