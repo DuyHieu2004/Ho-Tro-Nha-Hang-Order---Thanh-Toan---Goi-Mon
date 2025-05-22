@@ -139,7 +139,7 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
         //   context,
         //   MaterialPageRoute(builder: (context) => HomePage()), // Thay HomePage bằng trang chính của bạn
         // );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen(),));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen1(),));
       }
     } on FirebaseAuthException catch (e) {
       // Đóng dialog trước khi hiển thị lỗi
@@ -362,7 +362,7 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => Home_Screen(nhanVien: loggedInNhanVien)),
+              builder: (context) => Home_Screen1(nhanVien: loggedInNhanVien)),
         );
       } else {
         // Hiển thị thông báo lỗi đăng nhập

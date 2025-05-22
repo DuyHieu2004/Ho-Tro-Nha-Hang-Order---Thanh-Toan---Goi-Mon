@@ -11,19 +11,19 @@ import '../models/NhanVien.dart';
 import 'Info_Screen.dart';
 import 'LogIn_Screen.dart';
 
-class Home_Screen extends StatefulWidget {
+class Home_Screen1 extends StatefulWidget {
 
   final NhanVien? nhanVien;
 
-  Home_Screen({this.nhanVien});
+  Home_Screen1({this.nhanVien});
 
 
   @override
-  _Home_ScreenState createState() => _Home_ScreenState();
+  _Home_Screen1State createState() => _Home_Screen1State();
 
 }
 
-class _Home_ScreenState extends State<Home_Screen> {
+class _Home_Screen1State extends State<Home_Screen1> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth _auth = FirebaseAuth.instance; // Khởi tạo instance của FirebaseAuth
 
