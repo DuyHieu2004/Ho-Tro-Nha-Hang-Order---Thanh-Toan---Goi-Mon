@@ -27,8 +27,8 @@ class NhanSuProvider extends ChangeNotifier {
     await _loadNhanSu(); // Làm mới danh sách sau khi sửa
   }
 
-  Future<void> deleteNhanVien(String id,String ma) async {
-    await _nhanSuService.deleteNhanSu(id,ma);
+  Future<void> deleteNhanVien(String ma) async {
+    await _nhanSuService.deleteNhanSu(ma);
     await _loadNhanSu();
   }
 

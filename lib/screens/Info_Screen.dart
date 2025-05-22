@@ -313,14 +313,14 @@ class _Info_ScreenState extends State<Info_Screen> {
 
   void _LoadDataIntoInfo() {
     _tenNVController.text = widget.nhanVien?.ten ?? '';
-    _cccdController.text = widget.nhanVien?.CCCD ?? '';
+    _cccdController.text = widget.nhanVien?.cccd ?? '';
     _maController.text = widget.nhanVien?.ma ?? '';
-    _sdtController.text = widget.nhanVien?.SDT ?? '';
+    _sdtController.text = widget.nhanVien?.sdt ?? '';
     _ngayVLController.text =widget.nhanVien?.ngayVL != null
         ? ' ${DateFormat('dd/MM/yyyy').format(widget.nhanVien!.ngayVL!.toDate())}'
         : 'Chưa cập nhật';
-    _tkController.text = widget.nhanVien?.tk ?? '';
-    _mkController.text = widget.nhanVien?.mk ?? '';
+    _tkController.text = widget.nhanVien?.taiKhoan ?? '';
+    _mkController.text = widget.nhanVien?.matKhau ?? '';
     _chucVuController.text = widget.nhanVien?.vaiTro ?? '';
   }
 }
