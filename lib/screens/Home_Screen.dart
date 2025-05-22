@@ -1,3 +1,4 @@
+import 'package:doan_nhom_cuoiky/widgets/RoleBaseWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -6,16 +7,37 @@ import 'package:badges/badges.dart' as badges;
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
+import '../models/NhanVien.dart';
+import 'Info_Screen.dart';
 import 'LogIn_Screen.dart';
 
 class Home_Screen extends StatefulWidget {
+
+  final NhanVien? nhanVien;
+
+  Home_Screen({this.nhanVien});
+
+
   @override
   _Home_ScreenState createState() => _Home_ScreenState();
+
 }
 
 class _Home_ScreenState extends State<Home_Screen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth _auth = FirebaseAuth.instance; // Khởi tạo instance của FirebaseAuth
+
+
+  final childrenVisibility = <bool>[
+    true, // Gọi món
+    true, // Thanh toán
+    true, // Đặt chỗ
+    true, // Hủy đặt chỗ
+    true, // Báo cáo
+    true, // Thống kê
+    true, // Nhân sự
+    true, // Cài đặt
+  ];
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
@@ -52,9 +74,52 @@ class _Home_ScreenState extends State<Home_Screen> {
 
   @override
   Widget build(BuildContext context) {
+
+    // Khởi tạo danh sách hiển thị (mặc định tất cả là false)
+    List<bool> childrenVisibility = List.filled(8, false);
+    bool showStatsSection = false;
+    bool showManagementSection = false;
+
+    // Phân quyền theo vai trò
+    switch (widget.nhanVien?.vaiTro) {
+      case "Quản Lý":
+      // Quản lý có tất cả quyền
+        childrenVisibility = List.filled(8, true);
+        showStatsSection = true;
+        showManagementSection = true;
+        break;
+
+
+      case "Nhân Viên Phục Vụ":
+
+      // Thu ngân: Gọi món, Thanh toán, Báo cáo, Cài đặt
+        childrenVisibility[0] = true; // Gọi món
+        childrenVisibility[1] = true; // Thanh toán
+        childrenVisibility[4] = true; // Báo cáo
+        childrenVisibility[7] = true; // Cài đặt
+        break;
+
+      case "Nhân Viên Thu Ngân":
+      // Phục vụ: Gọi món, Đặt chỗ, Hủy đặt chỗ
+        childrenVisibility[0] = true; // Gọi món
+        childrenVisibility[1] = true; // Thanh toán
+        childrenVisibility[2] = true; // Báo cáo
+        childrenVisibility[3] = true; // Cài đặt
+        childrenVisibility[4] = true; // Báo cáo
+        childrenVisibility[7] = true; // Cài đặt
+
+
+        break;
+
+      default:
+      // Mặc định ẩn tất cả nếu không xác định vai trò
+        childrenVisibility = List.filled(8, false);
+    }
+
+
     final now = DateTime.now();
     final formattedDate = DateFormat('dd/MM/yyyy').format(now);
-
+    final String _tenNhanVien = widget.nhanVien?.ten ?? '';
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -106,8 +171,8 @@ class _Home_ScreenState extends State<Home_Screen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Nguyễn Văn A',
+                  Text(
+                    _tenNhanVien,
                     style: TextStyle(
                       color: Colors.blueAccent,
                       fontSize: 18,
@@ -115,8 +180,10 @@ class _Home_ScreenState extends State<Home_Screen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Ngày vào làm: --/--/----', // Placeholder cho ngày
+                   Text(
+                    widget.nhanVien?.ngayVL != null
+                        ? 'Ngày vào làm: ${DateFormat('dd/MM/yyyy').format(widget.nhanVien!.ngayVL!.toDate())}'
+                        : 'Ngày vào làm: Chưa cập nhật', // Placeholder cho ngày
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 12,
@@ -125,26 +192,28 @@ class _Home_ScreenState extends State<Home_Screen> {
                 ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.person_outline, color: Colors.redAccent),
-              title: const Text('Thông tin cá nhân', style: TextStyle(fontWeight: FontWeight.w500)),
-              onTap: () {
-                Navigator.pop(context);
-              },
+
+            RoleBasedWidget(
+                child: ListTile(
+                  leading: const Icon(Icons.person_outline, color: Colors.redAccent),
+                  title: const Text('Thông tin cá nhân', style: TextStyle(fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)
+                    => Info_Screen(nhanVien: widget.nhanVien,),));
+                  },
+                ),
+                isVisible: true
             ),
-            ListTile(
-              leading: const Icon(Icons.lock_outline, color: Colors.blue),
-              title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.w500)),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.calendar_today_outlined, color: Colors.green),
-              title: const Text('Lịch làm việc', style: TextStyle(fontWeight: FontWeight.w500)),
-              onTap: () {
-                Navigator.pop(context);
-              },
+
+            RoleBasedWidget(
+                child: ListTile(
+                  leading: const Icon(Icons.lock_outline, color: Colors.blue),
+                  title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                isVisible: true
             ),
             const Divider(),
             Padding(
@@ -189,8 +258,8 @@ class _Home_ScreenState extends State<Home_Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'Xin chào, Nguyễn Văn A',
+             Text(
+              'Xin chào, ${_tenNhanVien}',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -199,120 +268,309 @@ class _Home_ScreenState extends State<Home_Screen> {
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              childAspectRatio: 1.3,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: <Widget>[
-                _buildDashboardIconButton(
-                  icon: Icons.restaurant_menu,
-                  label: 'Gọi món',
-                  backgroundColor: Colors.green.shade100,
-                  iconColor: Colors.green.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Gọi món
-                  },
-                ),
-                _buildDashboardIconButton(
-                  icon: Icons.payment,
-                  label: 'Thanh toán',
-                  backgroundColor: Colors.blue.shade100,
-                  iconColor: Colors.blue.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Thanh toán
-                  },
-                ),
-                _buildDashboardIconButton(
-                  icon: Icons.bar_chart,
-                  label: 'Báo cáo',
-                  backgroundColor: Colors.orange.shade100,
-                  iconColor: Colors.orange.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Báo cáo
-                  },
-                ),
-                _buildDashboardIconButton(
-                  icon: Icons.settings,
-                  label: 'Cài đặt',
-                  backgroundColor: Colors.grey.shade200,
-                  iconColor: Colors.grey.shade700,
-                  onPressed: () {
-                    // Xử lý khi nhấn Cài đặt
-                  },
-                ),
-              ],
+
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Tính toán chiều rộng khả dụng
+                final availableWidth = constraints.maxWidth - 32;
+                // Tính toán chiều rộng của mỗi nút
+                final itemWidth = (availableWidth / 2.2)+22;
+                final aspectRatio = 1.0;
+                final itemHeight = itemWidth * aspectRatio;
+                final visibleChildren = childrenVisibility.where((element) => element).length;
+                // Danh sách các nút chức năng
+                final children = [
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.restaurant_menu,
+                        label: 'Gọi món',
+                        backgroundColor: Colors.green.shade100,
+                        iconColor: Colors.green.shade700,
+                        onPressed: () {
+                          print('Gọi món được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[0],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.payment,
+                        label: 'Thanh toán',
+                        backgroundColor: Colors.blue.shade100,
+                        iconColor: Colors.blue.shade700,
+                        onPressed: () {
+                          print('Thanh toán được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[1],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.calendar_today,
+                        label: 'Đặt chỗ',
+                        backgroundColor: Colors.green,
+                        iconColor: Colors.orangeAccent,
+                        onPressed: () {
+                          print('Đặt chỗ được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[2],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.cancel,
+                        label: 'Hủy đặt chỗ',
+                        backgroundColor: Colors.red.shade100,
+                        iconColor: Colors.red.shade700,
+                        onPressed: () {
+                          print('Hủy đặt chỗ được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[3],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.bar_chart,
+                        label: 'Báo cáo',
+                        backgroundColor: Colors.orange.shade100,
+                        iconColor: Colors.orange.shade700,
+                        onPressed: () {
+                          print('Báo cáo được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[4],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.analytics,
+                        label: 'Thống kê',
+                        backgroundColor: Colors.yellow.shade100,
+                        iconColor: Colors.yellow.shade700,
+                        onPressed: () {
+                          print('Thống kê được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[5],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.people,
+                        label: 'Nhân sự',
+                        backgroundColor: Colors.brown.shade50,
+                        iconColor: Colors.brown.shade200,
+                        onPressed: () {
+                          print('Nhân sự được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[6],
+                    ),
+                  ),
+                  SizedBox(
+                    width: itemWidth,
+                    height: itemHeight,
+                    child: RoleBasedWidget(
+                      child: _buildDashboardIconButton(
+                        icon: Icons.settings,
+                        label: 'Cài đặt',
+                        backgroundColor: Colors.grey.shade200,
+                        iconColor: Colors.grey.shade700,
+                        onPressed: () {
+                          print('Cài đặt được nhấn!');
+                        },
+                      ),
+                      isVisible: childrenVisibility[7],
+                    ),
+                  ),
+                ];
+
+                // Sử dụng Wrap để bố trí các nút
+                return Wrap(
+                  spacing: 16.0,
+                  runSpacing: 16.0,
+                  alignment: WrapAlignment.spaceBetween, // Căn chỉnh các nút ra hai bên
+                  children: children.where((widget) => (widget as SizedBox).child != null && (widget.child as RoleBasedWidget).isVisible).toList(),
+                );
+              },
             ),
+
+
             const SizedBox(height: 20),
             const Text(
               'Thống Kê Hôm Nay',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            Row(
+            Column(
               children: <Widget>[
-                Expanded(
-                  child: _buildStatisticItem(
-                    label: 'Đơn',
-                    value: '2',
-                    icon: Icons.list_alt_outlined,
-                    iconBackgroundColor: Colors.pink.shade100,
-                    iconColor: Colors.pink.shade700,
-                    onPressed: () {
-                      // Xử lý khi nhấn Đơn
-                    },
-                  ),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _buildStatisticItem(
+                        label: 'Đơn',
+                        value: '2',
+                        icon: Icons.list_alt_outlined,
+                        iconBackgroundColor: Colors.pink.shade100,
+                        iconColor: Colors.pink.shade700,
+                        onPressed: () {
+                          // Xử lý khi nhấn Đơn
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatisticItem(
+                        label: 'Chi tiêu',
+                        value: '50',
+                        icon: Icons.attach_money_outlined,
+                        iconBackgroundColor: Colors.green.shade100,
+                        iconColor: Colors.green.shade700,
+                        onPressed: () {
+                          // Xử lý khi nhấn Chi tiêu
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatisticItem(
-                    label: 'Chi tiêu',
-                    value: '50',
-                    icon: Icons.attach_money_outlined,
-                    iconBackgroundColor: Colors.green.shade100,
-                    iconColor: Colors.green.shade700,
-                    onPressed: () {
-                      // Xử lý khi nhấn Chi tiêu
-                    },
-                  ),
-                ),
+                const SizedBox(height: 16),
+               RoleBasedWidget(
+                   child: Row(
+                     children: <Widget>[
+                       Expanded(
+                         child: _buildStatisticItem(
+                           label: 'Khách hàng',
+                           value: '21', // Thay bằng giá trị thực tế của bạn
+                           icon: Icons.person_outline,
+                           iconBackgroundColor: Colors.purple.shade100,
+                           iconColor: Colors.purple.shade700,
+                           onPressed: () {
+                             // Xử lý khi nhấn Khách hàng
+                           },
+                         ),
+                       ),
+                       const SizedBox(width: 16),
+                       Expanded(
+                         child: _buildStatisticItem(
+                           label: 'Đặt chỗ',
+                           value: '21', // Thay bằng giá trị thực tế của bạn
+                           icon: Icons.calendar_today_outlined,
+                           iconBackgroundColor: Colors.yellow.shade100,
+                           iconColor: Colors.yellow.shade700,
+                           onPressed: () {
+                             // Xử lý khi nhấn Đặt chỗ
+                           },
+                         ),
+                       ),
+                     ],
+                   ),
+                   isVisible: true
+               )
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Đơn hàng gần đây',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+            SizedBox(height: 12,),
+            RoleBasedWidget(
+                child: Container( // Thêm margin cho toàn bộ khối
+                  margin: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Container cho phần Header
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.yellowAccent,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)), // Bo tròn góc trên
+                          boxShadow: [ // Thêm đổ bóng nhẹ
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 2.0,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Đơn hàng gần đây',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // Xử lý khi nhấn Xem tất cả
+                              },
+                              child: const Text('Xem tất cả', style: TextStyle(color: Colors.blue)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      // Container cho phần danh sách đơn hàng
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0), // Thêm padding ngang
+                        child: SizedBox(
+                          height: 200,
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const ClampingScrollPhysics(),
+                            itemCount: 10,
+                            separatorBuilder: (BuildContext context, int index) => const Divider(height: 1), // Giảm chiều cao divider
+                            itemBuilder: (BuildContext context, int index) {
+                              return Padding( // Thêm padding cho mỗi ListTile
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.zero, // Loại bỏ padding mặc định của ListTile
+                                  title: Text('Bàn ăn # ${index + 1}'),
+                                  subtitle: Padding( // Thêm padding cho subtitle
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: Text(
+                                      '10:25 PM - ${index + 2} món',
+                                      style: TextStyle(color: Colors.grey.shade600), // Màu xám nhạt hơn
+                                    ),
+                                  ),
+                                  trailing: _buildOrderStatusBadge(index % 3),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Xử lý khi nhấn Xem tất cả
-                  },
-                  child: const Text('Xem tất cả', style: TextStyle(color: Colors.blue)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 200, // Đặt chiều cao cố định cho vùng chứa ListView
-              child: ListView.separated(
-                shrinkWrap: true, // Cần thiết khi ListView nằm trong một cột có kích thước vô hạn (SingleChildScrollView)
-                physics: const ClampingScrollPhysics(), // Ngăn cuộn tràn viền
-                itemCount: 10, // Tăng số lượng item để thấy hiệu ứng cuộn
-                separatorBuilder: (BuildContext context, int index) => const Divider(),
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    title: Text('Bàn ăn # ${index + 1}'),
-                    subtitle: Text('10:25 PM - ${index + 2} món'),
-                    trailing: _buildOrderStatusBadge(index % 3), // Sử dụng lại hàm tạo badge ngẫu nhiên
-                  );
-                },
-              ),
-            ),
+                isVisible: true
+            )
           ],
         ),
       ),
@@ -379,6 +637,8 @@ class _Home_ScreenState extends State<Home_Screen> {
     );
   }
 
+
+
   Widget _buildStatisticItem({
     required String label,
     required String value,
@@ -437,7 +697,7 @@ class _Home_ScreenState extends State<Home_Screen> {
     required VoidCallback onPressed,
   }) {
     return Card(
-      elevation: 2,
+      elevation: 10,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: backgroundColor,
       child: InkWell(
@@ -446,7 +706,7 @@ class _Home_ScreenState extends State<Home_Screen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(icon, size: 35, color: iconColor),
+            Icon(icon, size: 70, color: iconColor),
             const SizedBox(height: 8),
             Text(
               label,
@@ -454,43 +714,6 @@ class _Home_ScreenState extends State<Home_Screen> {
               textAlign: TextAlign.center,
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatisticIconButton({
-    required String label,
-    required String value,
-    required IconData icon,
-    required Color backgroundColor,
-    required Color textColor,
-    required VoidCallback onPressed,
-  }) {
-    return Card(
-      color: backgroundColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                label,
-                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
-              ),
-              const SizedBox(height: 4),
-              Icon(icon, color: textColor),
-            ],
-          ),
         ),
       ),
     );
