@@ -99,81 +99,6 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
     );
   }
 
-  // Hàm xử lý đăng nhập với Firebase
-  Future<void> _signInWithEmailAndPassword(BuildContext context) async {
-    try {
-      // Show a loading indicator,
-      showDialog(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 10),
-                Text("Đang đăng nhập..."),
-              ],
-            ),
-          );
-        },
-      );
-      final UserCredential userCredential = await _auth
-          .signInWithEmailAndPassword(
-            email:
-                _usernameController.text.trim(), // Sử dụng email làm username
-            password: _passwordController.text.trim(),
-          );
-
-      if (userCredential.user != null) {
-        // Close the loading dialog
-        Navigator.of(context).pop();
-        _showCustomAlertDialog(
-          context: context,
-          title: 'Đăng nhập thành công!',
-          content: 'Chào mừng bạn đến với ứng dụng.',
-          isSuccess: true, // Đăng nhập thành công
-        );
-        // Có thể chuyển đến trang chính của ứng dụng sau khi đăng nhập thành công
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomePage()), // Thay HomePage bằng trang chính của bạn
-        // );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen1(),));
-      }
-    } on FirebaseAuthException catch (e) {
-      // Đóng dialog trước khi hiển thị lỗi
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      // Xử lý lỗi đăng nhập (hiển thị thông báo lỗi cho người dùng)
-      String errorMessage = 'Có lỗi xảy ra khi đăng nhập.';
-      if (e.code == 'user-not-found') {
-        errorMessage = 'Không tìm thấy người dùng với email này.';
-      } else if (e.code == 'wrong-password') {
-        errorMessage = 'Mật khẩu không đúng.';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = "Email không hợp lệ";
-      }
-      _showCustomAlertDialog(
-        context: context,
-        title: 'Lỗi đăng nhập',
-        content: errorMessage,
-        isSuccess: false, // Đăng nhập thất bại
-      );
-    } catch (e) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      _showCustomAlertDialog(
-        context: context,
-        title: 'Lỗi',
-        content: 'Đã xảy ra lỗi: $e',
-        isSuccess: false, // Lỗi chung
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -335,7 +260,6 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
                       ),
                     ),
                     const SizedBox(height: 16.0),
-
                   ],
                 ),
               ),
@@ -362,13 +286,17 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => Home_Screen1(nhanVien: loggedInNhanVien)),
+            builder: (context) => HomeScreen(nhanVien: loggedInNhanVien),
+          ),
         );
       } else {
         // Hiển thị thông báo lỗi đăng nhập
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(
-              'Đăng nhập không thành công. Vui lòng kiểm tra email và mật khẩu.')),
+          const SnackBar(
+            content: Text(
+              'Đăng nhập không thành công. Vui lòng kiểm tra email và mật khẩu.',
+            ),
+          ),
         );
       }
     }

@@ -27,7 +27,7 @@ class HoaDon {
   HoaDon.fromMap(Map<String, dynamic> map) {
     _ma = map['ma']?.toString() ?? '';
     _nhanVien = map['maNhanVien'] != null
-        ? NhanVien.fromMap(map['maNhanVien'])
+        ? NhanVien.fromMap(map['maNhanVien'], map['maNhanVien']['id'] ?? '')
         : null;
     _ngayThanhToan = map['ngayThanhToan'] != null
         ? DateTime.parse(map['ngayThanhToan'].toString())

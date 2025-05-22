@@ -1,24 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Đổi Mật Khẩu',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: ChangePassword_Screen(),
-    );
-  }
-}
-
 class ChangePassword_Screen extends StatefulWidget {
   @override
   _ChangePassword_ScreenState createState() => _ChangePassword_ScreenState();

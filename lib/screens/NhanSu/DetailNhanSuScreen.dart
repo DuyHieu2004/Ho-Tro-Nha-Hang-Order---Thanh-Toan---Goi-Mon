@@ -1,14 +1,15 @@
-import 'package:doan_nhom_cuoiky/main.dart';
-import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doan_nhom_cuoiky/models/NhanVien.dart';
 import 'package:doan_nhom_cuoiky/providers/NhanSuProvider.dart';
-import 'package:provider/provider.dart';
+import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
-import '../../models/VaiTro.dart';
+import 'package:provider/provider.dart';
 
 class DetailNhanSu extends StatefulWidget {
   final NhanVien nhanVien;
@@ -20,6 +21,7 @@ class DetailNhanSu extends StatefulWidget {
 }
 
 class _DetailNhanSuState extends State<DetailNhanSu> {
+  // Controllers
   late TextEditingController maController;
   late TextEditingController tenController;
   late TextEditingController sdtController;
@@ -27,24 +29,174 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
   late TextEditingController tkController;
   late TextEditingController mkController;
   late TextEditingController anhController;
+  late TextEditingController ngayVLController;
+
+  // State variables
   File? _image;
-  String selectedVaiTro = ''; // Thêm biến để lưu vai trò được chọn
-  
-  final List<String> vaiTroOptions = ['Quản lý', 'Thu ngân', 'Phục vụ']; // Thêm danh sách vai trò
+  String selectedVaiTro = '';
+  DateTime? _selectedDate;
+  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
+  final List<String> vaiTroOptions = ['Quản lý', 'Thu ngân', 'Phục vụ'];
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _initializeState();
+  }
+
+  void _initializeControllers() {
     maController = TextEditingController(text: widget.nhanVien.ma);
     tenController = TextEditingController(text: widget.nhanVien.ten);
     sdtController = TextEditingController(text: widget.nhanVien.SDT);
     cccdController = TextEditingController(text: widget.nhanVien.CCCD);
     tkController = TextEditingController(text: widget.nhanVien.tk);
     mkController = TextEditingController(text: widget.nhanVien.mk);
-    anhController = TextEditingController(text: widget.nhanVien.anh);
-    selectedVaiTro = widget.nhanVien.vaiTro.toString(); // Khởi tạo giá trị vai trò
+    anhController = TextEditingController(text: widget.nhanVien.anh ?? '');
+    ngayVLController = TextEditingController();
   }
 
+  void _initializeState() {
+    if (widget.nhanVien.ngayVL != null) {
+      _selectedDate = widget.nhanVien.ngayVL!.toDate();
+      ngayVLController.text = _dateFormat.format(_selectedDate!);
+    }
+    selectedVaiTro = widget.nhanVien.vaiTro.toString();
+  }
+
+  // Event Handlers
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        ngayVLController.text = _dateFormat.format(picked);
+      });
+    }
+  }
+
+  Future<void> _requestPermission() async {
+    var status = await Permission.photos.status;
+    if (!status.isGranted) {
+      status = await Permission.photos.request();
+      if (!status.isGranted) {
+        _showSnackBar('Quyền truy cập vào thư viện ảnh bị từ chối', Colors.red);
+        return;
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    await _requestPermission();
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    final imageTemp = File(image.path);
+    setState(() {
+      _image = imageTemp;
+      anhController.text = image.path;
+    });
+  }
+
+  Future<void> _updateNhanVien() async {
+    final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
+    _showLoadingDialog();
+
+    try {
+      final Timestamp? ngayVLTimestamp = _selectedDate != null
+          ? Timestamp.fromDate(_selectedDate!)
+          : widget.nhanVien.ngayVL;
+
+      final updatedNhanVien = NhanVien(
+        id: widget.nhanVien.id,
+        ma: maController.text,
+        ten: tenController.text,
+        SDT: sdtController.text,
+        CCCD: cccdController.text,
+        tk: tkController.text,
+        mk: mkController.text,
+        vaiTro: selectedVaiTro,
+        anh: anhController.text.isNotEmpty ? anhController.text : null,
+        ngayVL: ngayVLTimestamp,
+      );
+
+      await nhanSuProvider.updateNhanVien(updatedNhanVien);
+      _showSnackBar('Cập nhật thành công', Colors.green);
+      Navigator.pop(context);
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showSnackBar('Lỗi khi cập nhật: $e', Colors.red);
+    } finally {
+      Navigator.pop(context); // Đóng loading dialog
+    }
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: const Text(
+            'Xác nhận xóa',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Bạn có chắc chắn muốn xóa nhân viên này?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Hủy',
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              ),
+            ),
+            TextButton(
+              onPressed: () => _handleDelete(),
+              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ).animate().fade(duration: 300.ms).scale(duration: 300.ms, alignment: Alignment.center);
+      },
+    );
+  }
+
+  Future<void> _handleDelete() async {
+    _showLoadingDialog();
+
+    final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
+    try {
+      await nhanSuProvider.deleteNhanVien(widget.nhanVien.id!, widget.nhanVien.ma!);
+      Navigator.pop(context); // Đóng loading
+      Navigator.pop(context); // Đóng dialog xác nhận
+      _showSnackBar('Xóa nhân viên thành công', Colors.green);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NhanSuScreen()),
+      );
+    } catch (e) {
+      Navigator.pop(context); // Đóng loading
+      _showSnackBar('Lỗi khi xóa: $e', Colors.red);
+    }
+  }
+
+  // UI Helpers
   Widget _buildInfoRow(BuildContext context, String label, Widget value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -62,120 +214,38 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
               ),
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: value,
-          ),
+          Expanded(flex: 3, child: value),
         ],
       ),
     );
   }
 
-  Future<void> _requestPermission() async {
-    var status = await Permission.photos.status;
-    if (!status.isGranted) {
-      status = await Permission.photos.request();
-      if (!status.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Quyền truy cập vào thư viện ảnh bị từ chối'),
-          ),
-        );
-        return;
-      }
-    }
-  }
-
-  Future<void> _pickImage() async {
-    await _requestPermission();
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (image == null) return;
-    final imageTemp = File(image.path);
-    setState(() {
-      _image = imageTemp;
-      anhController.text = image.path;
-    });
-  }
-
-  Future<void> _updateNhanVien(BuildContext context) async {
-    final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
-    try {
-      final updatedNhanVien = NhanVien(
-        ma: maController.text,
-        ten: tenController.text,
-        SDT: sdtController.text,
-        CCCD: cccdController.text,
-        tk: tkController.text,
-        mk: mkController.text,
-        vaiTro: VaiTro.fromString(selectedVaiTro), // Sử dụng vai trò đã chọn
-        anh: anhController.text.isNotEmpty ? anhController.text : null,
-      );
-      await nhanSuProvider.updateNhanVien(updatedNhanVien);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cập nhật thành công')),
-      );
-      Navigator.pop(context);
-      Navigator.pop(context, true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi cập nhật: $e')),
-      );
-    }
-  }
-
-  void _showDeleteConfirmDialog(BuildContext context) {
+  void _showLoadingDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Xác nhận xóa'),
-          content: const Text('Bạn có chắc chắn muốn xóa nhân viên này?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
             ),
-            TextButton(
-              onPressed: () async {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  },
-                );
-
-                final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
-                try {
-                  await nhanSuProvider.deleteNhanVien(widget.nhanVien.ma!);
-                  Navigator.pop(context); // Đóng dialog loading
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Xóa nhân viên thành công'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NhanSuScreen()),
-                  );
-                } catch (e) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Lỗi khi xóa: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-            ),
-          ],
+          ),
         );
       },
+    );
+  }
+
+  void _showSnackBar(String message, Color backgroundColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      ),
     );
   }
 
@@ -191,7 +261,7 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteConfirmDialog(context),
+            onPressed: _showDeleteConfirmDialog,
           ),
         ],
       ),
@@ -209,7 +279,8 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
                         ? FileImage(_image!)
                         : (widget.nhanVien.anh != null && widget.nhanVien.anh!.isNotEmpty
                             ? NetworkImage(widget.nhanVien.anh!)
-                            : const AssetImage('assets/images/default.png')) as ImageProvider,
+                            : const AssetImage('assets/images/default.png'))
+                            as ImageProvider,
                   ),
                   Positioned(
                     bottom: 0,
@@ -229,9 +300,7 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
             Card(
               elevation: 2,
               color: Theme.of(context).colorScheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -243,7 +312,7 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
                         controller: maController,
                         decoration: const InputDecoration(border: InputBorder.none),
                         enabled: false,
-                      ),                      
+                      ),
                     ),
                     const Divider(),
                     _buildInfoRow(
@@ -290,13 +359,12 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
                       DropdownButton<String>(
                         value: selectedVaiTro,
                         isExpanded: true,
-                        underline: Container(), // Bỏ đường gạch chân
+                        underline: Container(),
                         onChanged: (String? newValue) {
-                          setState(() {
-                            selectedVaiTro = newValue!;
-                          });
+                          setState(() => selectedVaiTro = newValue!);
                         },
-                        items: vaiTroOptions.map<DropdownMenuItem<String>>((String value) {
+                        items: vaiTroOptions
+                            .map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(value),
@@ -323,7 +391,7 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: () => _updateNhanVien(context),
+                      onPressed: _updateNhanVien,
                       child: const Text('Cập nhật'),
                     ),
                   ],
@@ -334,5 +402,18 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    maController.dispose();
+    tenController.dispose();
+    sdtController.dispose();
+    cccdController.dispose();
+    tkController.dispose();
+    mkController.dispose();
+    anhController.dispose();
+    ngayVLController.dispose();
+    super.dispose();
   }
 }

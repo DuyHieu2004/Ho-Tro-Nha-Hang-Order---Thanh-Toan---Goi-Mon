@@ -4,8 +4,9 @@ import 'package:doan_nhom_cuoiky/screens/NhanSu/AddNhanSuScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/NhanSu/DetailNhanSuScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:doan_nhom_cuoiky/main.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
+// Widget màn hình chính quản lý nhân sự
 class NhanSuScreen extends StatefulWidget {
   const NhanSuScreen({super.key});
 
@@ -17,6 +18,7 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
   List<NhanVien> nhanViens = [];
   TextEditingController search = TextEditingController();
   bool _isLoading = false;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -30,9 +32,7 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
     setState(() {
       _isLoading = true;
     });
-    
     final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
-    
     setState(() {
       nhanViens = nhanSuProvider.nhanSu;
       _isLoading = false;
@@ -42,25 +42,18 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
   void _searchList() {
     setState(() {
       if (search.text.isNotEmpty) {
-        nhanViens =
-            nhanViens
-                .where(
-                  (element) =>
-                      element.ma!.toLowerCase().contains(
-                        search.text.toLowerCase(),
-                      ) ||
-                      element.ten!.toLowerCase().contains(
-                        search.text.toLowerCase(),
-                      ),
-                )
-                .toList();
+        nhanViens = nhanViens
+            .where(
+              (element) =>
+                  element.ma!.toLowerCase().contains(search.text.toLowerCase()) ||
+                  element.ten!.toLowerCase().contains(search.text.toLowerCase()),
+            )
+            .toList();
       } else {
         _loadNhanSu();
       }
     });
   }
-
-  bool _sortAscending = true;
 
   void _sortList() {
     setState(() {
@@ -82,7 +75,6 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
         if (nhanViens.isEmpty && nhanSuProvider.nhanSu.isNotEmpty) {
           nhanViens = nhanSuProvider.nhanSu;
         }
-
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -94,7 +86,7 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              icon: Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back),
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
             actions: [
@@ -128,14 +120,12 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
                       Icons.search,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    border: OutlineInputBorder(
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
                     ),
                     hintText: "Tìm kiếm nhân viên",
                     hintStyle: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                   onChanged: (value) => _searchList(),
@@ -150,9 +140,7 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
                     IconButton(
                       onPressed: _sortList,
                       icon: Icon(
-                        _sortAscending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
+                        _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       tooltip: _sortAscending ? 'Sắp xếp A-Z' : 'Sắp xếp Z-A',
@@ -160,17 +148,15 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
                   ],
                 ),
                 Expanded(
-                  child:
-                      nhanViens.isEmpty
-                          ? Center(child: Text('Không có nhân viên nào'))
-                          : ListView.builder(
-                            itemCount: nhanViens.length,
-                            itemBuilder:
-                                (context, index) => NhanSuItemCard(
-                                  nv: nhanViens[index],
-                                  onRefresh: _loadNhanSu,
-                                ),
+                  child: nhanViens.isEmpty
+                      ? const Center(child: Text('Không có nhân viên nào'))
+                      : ListView.builder(
+                          itemCount: nhanViens.length,
+                          itemBuilder: (context, index) => NhanSuItemCard(
+                            nv: nhanViens[index],
+                            onRefresh: _loadNhanSu,
                           ),
+                        ),
                 ),
               ],
             ),
@@ -181,19 +167,80 @@ class _NhanSuScreenState extends State<NhanSuScreen> {
   }
 }
 
+// Widget hiển thị từng nhân viên trong danh sách
 class NhanSuItemCard extends StatelessWidget {
   final NhanVien? nv;
   final VoidCallback onRefresh;
   const NhanSuItemCard({super.key, required this.nv, required this.onRefresh});
 
+  @override
+  Widget build(BuildContext context) {
+    if (nv == null) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(Radius.circular(5)),
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+            strokeAlign: 1,
+          ),
+        ),
+      ),
+      child: ListTile(
+        onTap: () => _showDetailDialog(context),
+        leading: const CircleAvatar(
+          backgroundImage: AssetImage('assets/images/default.png') as ImageProvider,
+        ),
+        title: Text(
+          nv?.ten ?? 'Không có tên',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        subtitle: Text(
+          nv?.vaiTro.toString() ?? '',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () {
+                if (nv == null) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailNhanSu(nhanVien: nv!),
+                  ),
+                ).then((_) => onRefresh());
+              },
+              icon: Icon(
+                Icons.more_horiz_outlined,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showDetailDialog(BuildContext context) {
     if (nv == null) return;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Thông tin nhân viên'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: const Text(
+            'Thông tin nhân viên',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,9 +249,7 @@ class NhanSuItemCard extends StatelessWidget {
                 Center(
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage:
-                        const AssetImage('assets/images/default.png')
-                            as ImageProvider,
+                    backgroundImage: const AssetImage('assets/images/default.png') as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -213,45 +258,38 @@ class NhanSuItemCard extends StatelessWidget {
                 _buildInfoRow(context, 'Số điện thoại:', nv?.SDT ?? 'Không có'),
                 _buildInfoRow(context, 'CCCD:', nv?.CCCD ?? 'Không có'),
                 _buildInfoRow(context, 'Tài khoản:', nv?.tk ?? 'Không có'),
-                _buildInfoRow(
-                  context,
-                  'Vai trò:',
-                  nv?.vaiTro?.toString() ?? 'Không có',
-                ),
+                _buildInfoRow(context, 'Vai trò:', nv?.vaiTro?.toString() ?? 'Không có'),
               ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Đóng'),
+              child: Text(
+                'Đóng',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () async {
                 if (nv?.ma == null) return;
-
-                // Hiển thị loading
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                );
-
-                final nhanSuProvider = Provider.of<NhanSuProvider>(
-                  context,
-                  listen: false,
-                );
+                _showLoadingDialog(context);
+                final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
                 try {
-                  await nhanSuProvider.deleteNhanVien(nv!.ma!);
+                  await nhanSuProvider.deleteNhanVien(nv!.id!, nv!.ma!);
                   Navigator.pop(context); // Đóng loading
                   Navigator.pop(context); // Đóng dialog chi tiết
-                  onRefresh(); // Refresh danh sách
+                  onRefresh();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Xóa thành công'),
+                    SnackBar(
+                      content: const Text('Xóa thành công'),
                       backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                   );
                 } catch (e) {
@@ -260,6 +298,10 @@ class NhanSuItemCard extends StatelessWidget {
                     SnackBar(
                       content: Text('Lỗi khi xóa: $e'),
                       backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                   );
                 }
@@ -276,13 +318,15 @@ class NhanSuItemCard extends StatelessWidget {
                   ),
                 ).then((_) => onRefresh());
               },
-              child: const Text(
+              child: Text(
                 'Chỉnh sửa',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ],
-        );
+        ).animate().fade(duration: 300.ms).scale(duration: 300.ms, alignment: Alignment.center);
       },
     );
   }
@@ -312,61 +356,21 @@ class NhanSuItemCard extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Kiểm tra nếu nv là null thì trả về một widget trống
-    if (nv == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(5)),
-        border: Border.symmetric(
-          horizontal: BorderSide(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
-            strokeAlign: 1,
-          ),
-        ),
-      ),
-      child: ListTile(
-        onTap: () => _showDetailDialog(context),
-        leading: CircleAvatar(
-          backgroundImage:
-              const AssetImage('assets/images/default.png') as ImageProvider,
-        ),
-        title: Text(
-          nv?.ten ?? 'Không có tên',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-        ),
-        subtitle: Text(
-          nv?.vaiTro.toString() ?? '',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () {
-                if (nv == null) return;
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailNhanSu(nhanVien: nv!),
-                  ),
-                ).then((_) => onRefresh());
-              },
-              icon: Icon(
-                Icons.more_horiz_outlined,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

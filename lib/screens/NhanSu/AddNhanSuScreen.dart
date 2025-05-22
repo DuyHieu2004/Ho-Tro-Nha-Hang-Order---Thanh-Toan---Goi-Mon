@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doan_nhom_cuoiky/models/NhanVien.dart';
-import 'package:doan_nhom_cuoiky/models/VaiTro.dart';
 import 'package:doan_nhom_cuoiky/providers/NhanSuProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,110 +17,18 @@ class AddNhanSuScreen extends StatefulWidget {
 }
 
 class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
-  TextEditingController ma = TextEditingController();
-  TextEditingController ten = TextEditingController();
-  TextEditingController sdt = TextEditingController();
-  TextEditingController cccd = TextEditingController();
-  TextEditingController tk = TextEditingController();
-  TextEditingController mk = TextEditingController();
-  String selectedVaiTro = 'Phục vụ';
-  TextEditingController anh = TextEditingController();
+  final TextEditingController ma = TextEditingController();
+  final TextEditingController ten = TextEditingController();
+  final TextEditingController sdt = TextEditingController();
+  final TextEditingController cccd = TextEditingController();
+  final TextEditingController tk = TextEditingController();
+  final TextEditingController mk = TextEditingController();
+  final TextEditingController anh = TextEditingController();
 
   final List<String> vaiTroOptions = ['Quản lý', 'Thu ngân', 'Phục vụ'];
+  String selectedVaiTro = 'Phục vụ';
   final _formKey = GlobalKey<FormState>();
   File? _image;
-
-  Future<void> _requestPermission() async {
-    var status = await Permission.photos.status;
-    if (!status.isGranted) {
-      status = await Permission.photos.request();
-      if (!status.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Quyền truy cập vào thư viện ảnh bị từ chối'),
-          ),
-        );
-        return;
-      }
-    }
-  }
-
-  Future<void> getImage() async {
-    await _requestPermission();
-    final image = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
-    if (image == null) return;
-
-    final imageTemp = File(image.path);
-    setState(() {
-      _image = imageTemp;
-      anh.text = image.path; // Cập nhật đường dẫn ảnh
-    });
-  }
-
-  void addNhanSu() async {
-    if (_formKey.currentState!.validate()) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        },
-      );
-
-      try {
-        final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
-        bool exists = await nhanSuProvider.checkNhanVienExists(ma.text);
-        if (exists) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Mã nhân viên đã tồn tại'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
-        VaiTro vaiTro = VaiTro.fromString(selectedVaiTro);
-        NhanVien nv = NhanVien(
-          ma: ma.text,
-          ten: ten.text,
-          SDT: sdt.text,
-          CCCD: cccd.text,
-          tk: tk.text,
-          mk: mk.text,
-          vaiTro: vaiTro,
-          anh: anh.text.isNotEmpty ? anh.text : null,
-        );
-
-        await nhanSuProvider.addNhanVien(nv);
-        Navigator.pop(context); // Đóng dialog loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Thêm nhân viên thành công'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        Navigator.pop(context, true);
-      } catch (e) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi thêm: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,7 +51,7 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
                 Container(
                   width: 100,
                   height: 100,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Color(0xFFE6E1FA),
                     shape: BoxShape.circle,
                   ),
@@ -335,6 +244,133 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _requestPermission() async {
+    var status = await Permission.photos.status;
+    if (!status.isGranted) {
+      status = await Permission.photos.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Quyền truy cập vào thư viện ảnh bị từ chối'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+        );
+        return;
+      }
+    }
+  }
+
+  Future<void> getImage() async {
+    await _requestPermission();
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+    if (image == null) return;
+
+    final imageTemp = File(image.path);
+    setState(() {
+      _image = imageTemp;
+      anh.text = image.path;
+    });
+  }
+
+  void addNhanSu() async {
+    if (_formKey.currentState!.validate()) {
+      _showLoadingDialog(context);
+
+      try {
+        final nhanSuProvider = Provider.of<NhanSuProvider>(
+          context,
+          listen: false,
+        );
+        bool exists = await nhanSuProvider.checkNhanVienExists(ma.text);
+        if (exists) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Mã nhân viên đã tồn tại'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+          );
+          return;
+        }
+
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: tk.text, password: mk.text);
+        String uid = userCredential.user!.uid;
+
+        NhanVien nv = NhanVien(
+          id: uid,
+          ma: ma.text,
+          ten: ten.text,
+          SDT: sdt.text,
+          CCCD: cccd.text,
+          tk: tk.text,
+          mk: mk.text,
+          vaiTro: selectedVaiTro,
+          anh: anh.text.isNotEmpty ? anh.text : null,
+          ngayVL: Timestamp.fromDate(DateTime.now()),
+        );
+
+        await nhanSuProvider.addNhanVien(nv);
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Thêm nhân viên thành công'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+        );
+
+        Navigator.pop(context, true);
+      } catch (e) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi thêm: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        );
+      },
     );
   }
 }
