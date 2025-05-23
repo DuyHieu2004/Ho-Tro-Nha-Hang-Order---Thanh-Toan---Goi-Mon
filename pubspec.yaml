@@ -44,6 +44,7 @@ dependencies:
   convex_bottom_bar: ^3.2.0
   google_nav_bar: ^5.0.7
   another_flushbar: ^1.12.30
+  fl_chart: ^0.63.0
 
 
 dev_dependencies:
