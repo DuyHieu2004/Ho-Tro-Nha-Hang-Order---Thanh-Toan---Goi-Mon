@@ -241,14 +241,23 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildRevenueStatistics() {
-    final List<double> dailyRevenue = [10, 15, 12, 14, 9, 14, 10]; // doanh thu
-    final List<double> customerCounts = [30, 40, 28, 50, 20, 35, 45]; // khách hàng
+    final List<double> dailyRevenue = [250, 105, 120, 140, 90, 104, 100];
+    final List<double> customerCounts = [17, 24, 10, 50, 12, 30, 15];
+    final List<int> orderCounts = [15, 7, 8, 10, 12, 5, 4];
 
-    // Scale doanh thu để phù hợp với trục y (giả sử max khách hàng ~60)
-    final double revenueScale = 3.5;
+    final double revenueScale = 0.2;
+    final double maxY = 60;
+
+    // Ngày gần đây (7 ngày gần nhất)
+    final now = DateTime.now();
+    final List<String> recentDays = List.generate(7, (i) {
+      final date = now.subtract(Duration(days: 6 - i));
+      return '${date.day}/${date.month}';
+    });
+
     final List<FlSpot> revenueLine = List.generate(
       dailyRevenue.length,
-          (index) => FlSpot(index + 1.8, dailyRevenue[index] * revenueScale), // dịch qua phải
+          (i) => FlSpot(i + 0.5, dailyRevenue[i] * revenueScale),
     );
 
     return SingleChildScrollView(
@@ -256,62 +265,93 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Thống kê doanh thu',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          const Text('Thống kê doanh thu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+
+          Row(
+            children: [
+              Row(
+                children: [
+                  Container(width: 16, height: 8, color: Colors.green.shade600),
+                  const SizedBox(width: 4),
+                  const Text('Khách hàng', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Row(
+                children: [
+                  Container(width: 16, height: 8, color: Colors.amber.shade700),
+                  const SizedBox(width: 4),
+                  const Text('Doanh thu', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           AspectRatio(
-            aspectRatio: 1.6,
+            aspectRatio: 0.9, //kích thước biêủ đồ
             child: Stack(
               children: [
-                /// Biểu đồ cột (Khách hàng)
                 BarChart(
                   BarChartData(
                     minY: 0,
-                    maxY: 300,
+                    maxY: maxY,
+                    gridData: FlGridData(show: false),
                     barTouchData: BarTouchData(enabled: false),
-                    gridData: FlGridData(show: true),
                     titlesData: FlTitlesData(
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
-                            final days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-                            if (value.toInt() >= 0 && value.toInt() < days.length) {
+                            if (value.toInt() >= 0 && value.toInt() < recentDays.length) {
                               return SideTitleWidget(
                                 axisSide: meta.axisSide,
                                 child: Text(
-                                  days[value.toInt()],
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  recentDays[value.toInt()],
+                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               );
-                            } else {
-                              return const SizedBox.shrink();
                             }
+                            return const SizedBox.shrink();
                           },
+                          interval: 1,
                         ),
                       ),
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize: 40,
+                          interval: 10,
+                          reservedSize: 30,
                         ),
                       ),
                       topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: 10,
+                          getTitlesWidget: (value, meta) {
+                            final scaled = value / revenueScale;
+                            if (scaled % 10 == 0) { //chỉnh cột y bên phải
+                              return Text('${scaled.toStringAsFixed(0)}k', style: const TextStyle(fontSize: 12));
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
                     ),
                     borderData: FlBorderData(show: false),
                     barGroups: List.generate(customerCounts.length, (i) {
                       return BarChartGroupData(
                         x: i,
-                        barsSpace: 40, // thêm khoảng cách giữa các cột
+                        barsSpace: 40,
                         barRods: [
                           BarChartRodData(
                             toY: customerCounts[i],
                             color: Colors.green.shade600,
-                            width: 16,
+                            width: 15, //độ rộng cột
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ],
@@ -319,33 +359,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     }),
                   ),
                 ),
-
-                /// Biểu đồ đường (Doanh thu)
                 LineChart(
                   LineChartData(
-                    lineTouchData: LineTouchData(enabled: false),
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 110,
-                          getTitlesWidget: (value, meta) {
-                            final scaledValue = value / revenueScale;
-                            return Text('${scaledValue.toStringAsFixed(0)}k', style: const TextStyle(fontSize: 10));
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    minX: 0,
-                    maxX: 6,
                     minY: 0,
-                    maxY: 60,
+                    maxY: maxY,
+                    gridData: FlGridData(
+                      show: true,
+                      horizontalInterval: 10,
+                    ),
+                    lineTouchData: LineTouchData(enabled: false),
+                    titlesData: FlTitlesData(show: false),
+                    borderData: FlBorderData(show: false),
                     lineBarsData: [
                       LineChartBarData(
                         spots: revenueLine,
@@ -357,6 +381,53 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                     ],
                   ),
+                ),
+              ],
+            ),
+          ),
+
+  const SizedBox(height: 20),
+
+          /// Mục thống kê hôm nay
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Thống kê hôm nay',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    const Text('Số khách hàng:'),
+                    const Spacer(),
+                    Text('${customerCounts.last.toInt()} người'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    const Text('Tổng doanh thu:'),
+                    const Spacer(),
+                    Text('${dailyRevenue.last.toInt()}.000 VNĐ'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    const Text('Số đơn hàng:'),
+                    const Spacer(),
+                    Text('${orderCounts.last.toInt()} đơn'),
+                  ],
                 ),
               ],
             ),
