@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ReportsScreen(),
-    ),
-  );
-}
+import '../data/report_data.dart';
 
 class ReportsScreen extends StatefulWidget {
   @override
@@ -215,16 +207,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Expanded(
                     child: Center(
                       child: Container(
-                        width: 340, // chiều rộng khung
+                        width: 340,
                         padding: const EdgeInsets.all(25),
                         color: Colors.grey.shade300,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Header ngày
+                            // Hiển thị tiêu đề Ngày / Tháng / Năm
                             Center(
                               child: Text(
-                                _formatDate(_recentDates[_selectedDateIndex]),
+                                _selectedFilterType == 'Năm'
+                                    ? 'Năm ${_filterItems[_selectedDateIndex]}'
+                                    : _selectedFilterType == 'Tháng'
+                                    ? 'Tháng ${_filterItems[_selectedDateIndex]}'
+                                    : _formatDate(_recentDates[_selectedDateIndex]),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 25,
@@ -235,32 +231,90 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                             // Danh sách báo cáo
                             Expanded(
-                              child: ListView.builder(
-                                itemCount: 6,
-                                itemBuilder: (context, index) {
-                                  return Container(
-                                    margin: const EdgeInsets.symmetric(vertical: 6),
-                                    padding: const EdgeInsets.all(8),
-                                    color: Colors.white,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: const [
-                                            Text('Nguyễn Văn A'),
-                                            SizedBox(height: 4),
-                                            Text('Số hóa đơn: 10'),
+                              child: Builder(
+                                builder: (context) {
+                                  final selectedDateStr = _filterItems[_selectedDateIndex];
+                                  final entries = mockReportData[selectedDateStr] ?? [];
+
+                                  if (entries.isEmpty) {
+                                    return const Center(child: Text('Không có dữ liệu.'));
+                                  }
+
+                                  return ListView.builder(
+                                    itemCount: entries.length,
+                                    itemBuilder: (context, index) {
+                                      final entry = entries[index];
+                                      return Container(
+                                        margin: const EdgeInsets.symmetric(vertical: 6),
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.grey.shade400,
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            )
                                           ],
                                         ),
-                                        TextButton(
-                                          onPressed: () {
-                                            // TODO: xử lý xem chi tiết
-                                          },
-                                          child: const Text('Xem chi tiết'),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(entry.name,
+                                                    style: const TextStyle(
+                                                        fontSize: 16, fontWeight: FontWeight.bold)),
+                                                const SizedBox(height: 4),
+                                                Text('Số hóa đơn: ${entry.invoiceCount}'),
+                                              ],
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      backgroundColor: Colors.white,
+                                                      title: const Center(child: Text('Chi tiết báo cáo')),
+                                                      content: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          const SizedBox(height: 16),
+                                                          Text('👤 Tên nhân viên: ${entry.name}', style: const TextStyle(fontSize: 16)),
+                                                          const SizedBox(height: 8),
+                                                          Text('🧾 Số hóa đơn: ${entry.invoiceCount}', style: const TextStyle(fontSize: 16)),
+                                                          const SizedBox(height: 8),
+                                                          Text('💰 Doanh thu: ${NumberFormat('#,###', 'vi_VN').format(entry.revenue)} VND',
+                                                            style: const TextStyle(fontSize: 16),
+                                                          ),
+                                                          const SizedBox(height: 16),
+                                                          Align(
+                                                            alignment: Alignment.center,
+                                                            child: ElevatedButton(
+                                                              onPressed: () => Navigator.pop(context),
+                                                              style: ElevatedButton.styleFrom(
+                                                                backgroundColor: Colors.green[700], // nền xanh
+                                                                foregroundColor: Colors.white, // chữ trắng
+                                                              ),
+                                                              child: const Text('Đóng'),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              child: const Text('Xem chi tiết'),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      );
+                                    },
                                   );
                                 },
                               ),
@@ -273,8 +327,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ],
               )
                   : Column(
-                children: [
-                  _buildReportCard(),
+                  children: [
+                    _buildReportCard(_filterItems[_selectedDateIndex]),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -302,7 +356,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 }
 
-Widget _buildReportCard() {
+Widget _buildReportCard(String dateKey) {
+  final entries = mockReportData[dateKey] ?? [];
+
+  final totalInvoices = entries.fold<int>(0, (sum, e) => sum + e.invoiceCount);
+  final totalRevenue = entries.fold<double>(0.0, (sum, e) => sum + e.revenue);
+  final nguoiLap = entries.isNotEmpty ? entries.first.name : "Chưa rõ";
+
   return Container(
     width: 320,
     padding: const EdgeInsets.all(16),
@@ -310,10 +370,10 @@ Widget _buildReportCard() {
       color: Colors.grey.shade200,
       borderRadius: BorderRadius.circular(8),
     ),
-    child: const Column(
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
+        const Center(
           child: Text(
             'Bản báo cáo',
             style: TextStyle(
@@ -323,39 +383,44 @@ Widget _buildReportCard() {
             ),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Ngày', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('15/2/2025', style: TextStyle(fontSize: 16)),
+            const Text('Ngày', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(dateKey, style: const TextStyle(fontSize: 16)),
           ],
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Hóa đơn', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('15', style: TextStyle(fontSize: 16)),
+            const Text('Hóa đơn', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('$totalInvoices', style: const TextStyle(fontSize: 16)),
           ],
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Doanh thu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('15.000', style: TextStyle(fontSize: 16)),
+            const Text('Doanh thu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('${NumberFormat("#,##0", "vi_VN").format(totalRevenue)} đ',
+                style: const TextStyle(fontSize: 16)),
           ],
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Người lập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text('Nguyen Van A', style: TextStyle(fontSize: 16)),
+            const Text('Người lập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(nguoiLap, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ],
     ),
   );
 }
+
+
+
+

@@ -7,6 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
 import 'LogIn_Screen.dart';
+import 'BaoCao_Screen.dart';
+import 'BaoCao_NhanVien_Screen.dart';
+import 'ThongKe_Screen.dart';
 
 class Home_Screen extends StatefulWidget {
   @override
@@ -231,7 +234,22 @@ class _Home_ScreenState extends State<Home_Screen> {
                   backgroundColor: Colors.orange.shade100,
                   iconColor: Colors.orange.shade700,
                   onPressed: () {
-                    // Xử lý khi nhấn Báo cáo
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ReportsScreen()),
+                    );
+                  },
+                ),
+                _buildDashboardIconButton(
+                  icon: Icons.insert_chart,
+                  label: 'Thống kê',
+                  backgroundColor: Colors.yellow.shade100,
+                  iconColor: Colors.orange.shade700,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => StatisticsScreen()),
+                    );
                   },
                 ),
                 _buildDashboardIconButton(
