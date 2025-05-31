@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: StatisticsScreen(),
-    ),
-  );
-}
+import '../data/dsnhanvien_data.dart';
+import '../data/report_data.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -16,10 +9,114 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class _StatisticsScreenState extends State<StatisticsScreen> {
-  int _selectedTab = 0; // 0: Nhân viên, 1: Doanh thu
+  int _selectedTab = 0;
+
+  List<String> getNewEmployees(List<Employee> employees) {
+    final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
+    return employees
+        .where((e) => e.workingDate.isAfter(cutoffDate))
+        .map((e) => e.name)
+        .toList();
+  }
+
+  List<String> getOldEmployees(List<Employee> employees) {
+    final newNames = getNewEmployees(employees).toSet();
+    return employees
+        .where((e) => !newNames.contains(e.name))
+        .map((e) => e.name)
+        .toList();
+  }
+
+  int getTotalUniqueEmployees(List<Employee> employees) {
+    return employees.map((e) => e.name).toSet().length;
+  }
+
+  List<Map<String, dynamic>> buildEmployeeDisplayList(List<String> names) {
+    return names.map((name) => {'name': name, 'isChecked': false}).toList();
+  }
+
+  void _showEmployeeDetails(String name) {
+    final employee = employeeList.firstWhere((e) => e.name == name);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text('Tên: ${employee.name}', style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('Ngày vào làm: ${employee.workingDate.toLocal().toString().split(' ')[0]}',
+                  style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              // Thêm các thông tin khác nếu có, ví dụ: chức vụ, số điện thoại,...
+              // Text('Chức vụ: ${employee.position}'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmployeeList(List<Map<String, dynamic>> employeeList) {
+    return Column(
+      children: employeeList.map((employee) {
+        final String fullName = employee['name'];
+        final String firstLetter = fullName.split(' ').first.substring(0, 1).toUpperCase();
+
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: Colors.green.shade700,
+            child: Text(
+              firstLetter,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          title: Text(fullName),
+          trailing: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.grey.shade200,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.more_horiz, size: 20, color: Colors.black87),
+              onPressed: () {
+                _showEmployeeDetails(fullName);
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    final newEmployees = getNewEmployees(employeeList);
+    final oldEmployees = getOldEmployees(employeeList);
+    final newEmployeesList = buildEmployeeDisplayList(newEmployees);
+    final oldEmployeesList = buildEmployeeDisplayList(oldEmployees);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -40,15 +137,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(0.5),
-          child: Container(
-            height: 0.5,
-            color: Colors.grey,
-          ),
+          child: Container(height: 0.5, color: Colors.grey),
         ),
       ),
       body: Column(
         children: [
-          // Tab chọn loại thống kê
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -67,64 +160,53 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ],
             ),
           ),
-
           if (_selectedTab == 0)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Vòng tròn "Tổng"
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black, width: 2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Tổng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('155', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    ),
+                  _buildCircleBox(
+                    title: 'Tổng',
+                    color: Colors.black,
+                    value: getTotalUniqueEmployees(employeeList),
                   ),
                   const SizedBox(width: 24),
-
-                  // Vòng tròn "Mới"
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.greenAccent, width: 2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Mới', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          SizedBox(height: 4),
-                          Text('3', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ),
-                    ),
+                  _buildCircleBox(
+                    title: 'Mới',
+                    color: Colors.greenAccent,
+                    value: newEmployees.length,
                   ),
                 ],
               ),
             ),
-
-          // Nội dung thống kê
           Expanded(
             child: _selectedTab == 0
-                ? _buildEmployeeStatistics()
+                ? _buildEmployeeStatistics(newEmployeesList, oldEmployeesList)
                 : _buildRevenueStatistics(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCircleBox({required String title, required Color color, required int value}) {
+    return Container(
+      width: 90,
+      height: 90,
+      decoration: BoxDecoration(
+        border: Border.all(color: color, width: 2),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 4),
+            Text('$value', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
       ),
     );
   }
@@ -157,19 +239,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  List<Map<String, dynamic>> newEmployees = [
-    {'name': 'Nguyễn Văn A', 'isChecked': false},
-    {'name': 'Nguyễn Văn B', 'isChecked': true},
-    {'name': 'Nguyễn Văn C', 'isChecked': true},
-  ];
-
-  List<Map<String, dynamic>> employees = [
-    {'name': 'Trần Thị D', 'isChecked': false},
-    {'name': 'Lê Văn E', 'isChecked': true},
-    {'name': 'Phạm Thị F', 'isChecked': true},
-  ];
-
-  Widget _buildEmployeeStatistics() {
+  Widget _buildEmployeeStatistics(
+      List<Map<String, dynamic>> newEmployees,
+      List<Map<String, dynamic>> oldEmployees) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,7 +254,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 'Nhân viên mới',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              children: [_buildEmployeeList(newEmployees)],
+              children: newEmployees.isEmpty
+                  ? [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Không có nhân viên mới.'),
+                )
+              ]
+                  : [_buildEmployeeList(newEmployees)],
             ),
           ),
           Theme(
@@ -193,7 +272,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 'Nhân viên',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              children: [_buildEmployeeList(employees)],
+              children: oldEmployees.isEmpty
+                  ? [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Không có nhân viên cũ.'),
+                )
+              ]
+                  : [_buildEmployeeList(oldEmployees)],
             ),
           ),
         ],
@@ -201,64 +287,45 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildEmployeeList(List<Map<String, dynamic>> employees) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: employees.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final employee = employees[index];
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.green.shade700,
-            child: Text(
-              employee['name'].toString().substring(0, 1),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          title: Text(employee['name']),
-          trailing: GestureDetector(
-            onTap: () {
-              // TODO: Xử lý khi nhấn vào dấu 3 chấm
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey, width: 1.5),
-              ),
-              padding: const EdgeInsets.all(6.0),
-              child: const Icon(
-                Icons.more_horiz,
-                size: 20,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildRevenueStatistics() {
-    final List<double> dailyRevenue = [250, 105, 120, 140, 90, 104, 100];
-    final List<double> customerCounts = [17, 24, 10, 50, 12, 30, 15];
-    final List<int> orderCounts = [15, 7, 8, 10, 12, 5, 4];
-
-    final double revenueScale = 0.2;
-    final double maxY = 60;
-
-    // Ngày gần đây (7 ngày gần nhất)
     final now = DateTime.now();
-    final List<String> recentDays = List.generate(7, (i) {
-      final date = now.subtract(Duration(days: 6 - i));
-      return '${date.day}/${date.month}';
-    });
+    final double revenueScale = 1 / 1_000_000; // 1 đơn vị = 1 triệu
+    final double maxY = 6.0; // 6 triệu -> 6 sau khi scale
+    final double maxCustomerY = 60;
+
+    // Lấy 7 ngày gần nhất và format key
+    final List<DateTime> last7Days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
+    final List<String> recentDays = last7Days.map((date) => '${date.day}/${date.month}').toList();
+
+    // Dữ liệu thống kê mỗi ngày
+    final List<double> dailyRevenue = [];
+    final List<double> customerCounts = [];
+    final List<int> orderCounts = [];
+
+    for (final date in last7Days) {
+      final key = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+      final dailyReports = mockReportData[key] ?? [];
+
+      final revenue = dailyReports.fold<double>(0.0, (sum, e) => sum + e.revenue);
+      final customers = dailyReports.fold<int>(0, (sum, e) => sum + e.customerCount);
+      final orders = dailyReports.fold<int>(0, (sum, e) => sum + e.invoiceCount);
+
+      dailyRevenue.add(revenue);
+      customerCounts.add(customers.toDouble());
+      orderCounts.add(orders);
+    }
 
     final List<FlSpot> revenueLine = List.generate(
       dailyRevenue.length,
-          (i) => FlSpot(i + 0.5, dailyRevenue[i] * revenueScale),
+          (i) => FlSpot(i.toDouble(), dailyRevenue[i] * revenueScale),
     );
+
+    //Thống kê hôm nay
+    final todayKey = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final todayReport = mockReportData[todayKey] ?? [];
+    final int todayCustomerCount = todayReport.fold(0, (sum, entry) => sum + entry.customerCount);
+    final int todayInvoiceCount = todayReport.fold(0, (sum, entry) => sum + entry.invoiceCount);
+    final double todayRevenue = todayReport.fold(0.0, (sum, entry) => sum + entry.revenue);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -296,9 +363,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 BarChart(
                   BarChartData(
                     minY: 0,
-                    maxY: maxY,
+                    maxY: maxCustomerY,
                     gridData: FlGridData(show: false),
-                    barTouchData: BarTouchData(enabled: false),
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipBgColor: Colors.black54,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          return BarTooltipItem(
+                            '${recentDays[group.x.toInt()]}\n'
+                                'Khách hàng: ${customerCounts[group.x.toInt()].toInt()}',
+                            const TextStyle(color: Colors.white),
+                          );
+                        },
+                      ),
+                    ),
                     titlesData: FlTitlesData(
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
@@ -319,28 +398,29 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           interval: 1,
                         ),
                       ),
+                      //Cột Y bên trái
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          interval: 10,
+                          interval: 10, // cách nhau 10
                           reservedSize: 30,
-                        ),
-                      ),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 30,
-                          interval: 10,
                           getTitlesWidget: (value, meta) {
-                            final scaled = value / revenueScale;
-                            if (scaled % 10 == 0) { //chỉnh cột y bên phải
-                              return Text('${scaled.toStringAsFixed(0)}k', style: const TextStyle(fontSize: 12));
-                            }
-                            return const SizedBox.shrink();
+                            return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10));
                           },
                         ),
                       ),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      //Cột Y bên phải
+                      // rightTitles: AxisTitles(
+                      //   sideTitles: SideTitles(
+                      //     showTitles: true,
+                      //     reservedSize: 15, //chỉnh cột y bên phải qua trái/phải
+                      //     interval: 1, // mỗi mốc là 1tr
+                      //     getTitlesWidget: (value, meta) {
+                      //       return Text('${value.toInt()}tr', style: const TextStyle(fontSize: 12));
+                      //     },
+                      //   ),
+                      // ),
                     ),
                     borderData: FlBorderData(show: false),
                     barGroups: List.generate(customerCounts.length, (i) {
@@ -361,14 +441,27 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
                 LineChart(
                   LineChartData(
+                    minX: 0,
+                    maxX: 6,
                     minY: 0,
                     maxY: maxY,
-                    gridData: FlGridData(
-                      show: true,
-                      horizontalInterval: 10,
-                    ),
+                    gridData: FlGridData(show: false),
                     lineTouchData: LineTouchData(enabled: false),
-                    titlesData: FlTitlesData(show: false),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 1,
+                          reservedSize: 30,
+                          getTitlesWidget: (value, meta) {
+                            return Text('${value.toInt()}tr', style: const TextStyle(fontSize: 10));
+                          },
+                        ),
+                      ),
+                    ),
                     borderData: FlBorderData(show: false),
                     lineBarsData: [
                       LineChartBarData(
@@ -386,7 +479,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
           ),
 
-  const SizedBox(height: 20),
+          const SizedBox(height: 28),
 
           /// Mục thống kê hôm nay
           Container(
@@ -408,7 +501,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: [
                     const Text('Số khách hàng:'),
                     const Spacer(),
-                    Text('${customerCounts.last.toInt()} người'),
+                    Text('$todayCustomerCount người'),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -417,7 +510,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: [
                     const Text('Tổng doanh thu:'),
                     const Spacer(),
-                    Text('${dailyRevenue.last.toInt()}.000 VNĐ'),
+                    Text('${todayRevenue.toInt().toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => '.')} VNĐ'),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -426,7 +519,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   children: [
                     const Text('Số đơn hàng:'),
                     const Spacer(),
-                    Text('${orderCounts.last.toInt()} đơn'),
+                    Text('$todayInvoiceCount đơn'),
                   ],
                 ),
               ],
@@ -450,3 +543,4 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 }
+
