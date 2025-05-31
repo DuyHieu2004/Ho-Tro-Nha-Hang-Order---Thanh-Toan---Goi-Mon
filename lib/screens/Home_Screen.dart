@@ -6,6 +6,7 @@ import 'package:badges/badges.dart' as badges;
 import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
+import '../data/report_data.dart';
 import 'LogIn_Screen.dart';
 import 'BaoCao_Screen.dart';
 import 'BaoCao_NhanVien_Screen.dart';
@@ -234,12 +235,59 @@ class _Home_ScreenState extends State<Home_Screen> {
                   backgroundColor: Colors.orange.shade100,
                   iconColor: Colors.orange.shade700,
                   onPressed: () {
+                   //Hiển thị giao diện BaoCao_Screen
                     Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => ReportsScreen()),
                     );
+
+                    //Hiển thị giao diện BaoCao_NhanVien_Screen
+                   // final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+                   // final danhSach = mockReportData[today];
+                   //
+                   // // Lấy danh sách nhân viên trong ngày 31/05/2025
+                   // // List<ReportEntry> danhSach = mockReportData['31/05/2025'] ?? [];
+                   //
+                   // if (danhSach == null || danhSach.isEmpty) {
+                   // // Không có dữ liệu cho ngày hôm nay
+                   // ScaffoldMessenger.of(context).showSnackBar(
+                   // SnackBar(content: Text('Không có dữ liệu báo cáo hôm nay')),
+                   // );
+                   // return;
+                   // }
+                   //
+                   // final nv = danhSach.first; // Lấy nhân viên đầu tiên trong danh sách hôm nay
+                   //
+                   // // Lấy nhân viên có sẵn biến maNhanVienDangNhap
+                   // // final nv = danhSach.firstWhere(
+                   // //       (e) => e.employeeId == maNhanVienDangNhap,
+                   // //   orElse: () => null,
+                   // // );
+                   // //
+                   // // if (nv == null) {
+                   // //   ScaffoldMessenger.of(context).showSnackBar(
+                   // //     SnackBar(content: Text('Không có báo cáo cho nhân viên hiện tại')),
+                   // //   );
+                   // //   return;
+                   // // }
+                   //
+                   // Navigator.push(
+                   //   context,
+                   //   MaterialPageRoute(
+                   //     builder: (context) =>
+                   //         Reports_NhanVien_Screen(
+                   //           maNhanVien: nv.employeeId,
+                   //           tenNhanVien: nv.name,
+                   //           tongHoaDon: nv.invoiceCount,
+                   //           gioBatDau: nv.shiftStart,
+                   //           gioKetThuc: nv.shiftEnd,
+                   //           ngayLap: today,
+                   //         ),
+                   //   ),
+                   // );
                   },
                 ),
+
                 _buildDashboardIconButton(
                   icon: Icons.insert_chart,
                   label: 'Thống kê',

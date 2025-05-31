@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
+import '../data/report_data.dart';
 
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Reports_NhanVien_Screen(),
-    ),
-  );
-}
+// void main() {
+//   runApp(
+//     MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: Reports_NhanVien_Screen(),
+//     ),
+//   );
+// }
 
 class Reports_NhanVien_Screen extends StatelessWidget {
-  const Reports_NhanVien_Screen({super.key});
+  final String maNhanVien;
+  final String tenNhanVien;
+  final int tongHoaDon;
+  final String gioBatDau;
+  final String gioKetThuc;
+  final String ngayLap;
+
+  const Reports_NhanVien_Screen({
+    super.key,
+    required this.maNhanVien,
+    required this.tenNhanVien,
+    required this.tongHoaDon,
+    required this.gioBatDau,
+    required this.gioKetThuc,
+    required this.ngayLap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,23 +61,13 @@ class Reports_NhanVien_Screen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Thông tin nhân viên',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-
+            const Text('Thông tin nhân viên', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 20),
-            buildInfoRow('Mã', 'NV001'),
-
+            buildInfoRow('Mã', maNhanVien),
             const SizedBox(height: 20),
-            buildInfoRow('Họ tên', 'Nguyễn Văn A'),
-
+            buildInfoRow('Họ tên', tenNhanVien),
             const Divider(height: 32, thickness: 1, color: Colors.black),
-
-            const Text(
-              'Phiếu báo cáo',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+            const Text('Phiếu báo cáo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -70,73 +76,23 @@ class Reports_NhanVien_Screen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Ngày lập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        width: 150, // Căn giữa nửa phải
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text('5/7/2025', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  ),
+                  buildInfoRow('Ngày lập', ngayLap),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Tổng hóa đơn', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        width: 150,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text('8', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  ),
+                  buildInfoRow('Tổng hóa đơn', tongHoaDon.toString()),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Giờ bắt đầu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        width: 150,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text('8:00', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  ),
+                  buildInfoRow('Giờ bắt đầu', gioBatDau),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Giờ kết thúc', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      SizedBox(
-                        width: 150,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text('14:00', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ],
-                  ),
+                  buildInfoRow('Giờ kết thúc', gioKetThuc),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Xử lý nộp báo cáo
+                  // TODO: xử lý nộp báo cáo
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -145,10 +101,7 @@ class Reports_NhanVien_Screen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Nộp báo cáo',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+                child: const Text('Nộp báo cáo', style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ],
