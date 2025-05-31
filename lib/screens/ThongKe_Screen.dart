@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../data/dsnhanvien_data.dart';
 import '../data/report_data.dart';
+import 'package:intl/intl.dart';
 
 class StatisticsScreen extends StatefulWidget {
   @override
@@ -37,6 +38,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   void _showEmployeeDetails(String name) {
     final employee = employeeList.firstWhere((e) => e.name == name);
+    final formattedDate = DateFormat('dd/MM/yyyy').format(employee.workingDate); // <-- Định dạng ngày
 
     showModalBottomSheet(
       context: context,
@@ -63,8 +65,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ),
               Text('Tên: ${employee.name}', style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
-              Text('Ngày vào làm: ${employee.workingDate.toLocal().toString().split(' ')[0]}',
-                  style: const TextStyle(fontSize: 16)),
+              Text('Ngày vào làm: $formattedDate', style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
               // Thêm các thông tin khác nếu có, ví dụ: chức vụ, số điện thoại,...
               // Text('Chức vụ: ${employee.position}'),
@@ -290,8 +291,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildRevenueStatistics() {
     final now = DateTime.now();
     final double revenueScale = 1 / 1_000_000; // 1 đơn vị = 1 triệu
-    final double maxY = 6.0; // 6 triệu -> 6 sau khi scale
-    final double maxCustomerY = 60;
+    // final double maxY = 6.0; // 6 triệu -> 6 sau khi scale
 
     // Lấy 7 ngày gần nhất và format key
     final List<DateTime> last7Days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
@@ -317,7 +317,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     final List<FlSpot> revenueLine = List.generate(
       dailyRevenue.length,
-          (i) => FlSpot(i.toDouble(), dailyRevenue[i] * revenueScale),
+          (index) => FlSpot(index.toDouble(), dailyRevenue[index] * revenueScale),
     );
 
     //Thống kê hôm nay
@@ -357,14 +357,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           const SizedBox(height: 20),
 
           AspectRatio(
-            aspectRatio: 0.9, //kích thước biêủ đồ
+            aspectRatio: 0.9,
             child: Stack(
               children: [
                 BarChart(
                   BarChartData(
+                    alignment: BarChartAlignment.spaceBetween,
                     minY: 0,
-                    maxY: maxCustomerY,
-                    gridData: FlGridData(show: false),
+                    maxY: 60,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.grey.withOpacity(0.5),
+                        strokeWidth: 1,
+                      ),
+                    ),
                     barTouchData: BarTouchData(
                       enabled: true,
                       touchTooltipData: BarTouchTooltipData(
@@ -382,56 +390,44 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
+                          interval: 1,
                           getTitlesWidget: (value, meta) {
                             if (value.toInt() >= 0 && value.toInt() < recentDays.length) {
                               return SideTitleWidget(
                                 axisSide: meta.axisSide,
                                 child: Text(
                                   recentDays[value.toInt()],
-                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                                 ),
                               );
                             }
                             return const SizedBox.shrink();
                           },
-                          interval: 1,
                         ),
                       ),
-                      //Cột Y bên trái
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          interval: 10, // cách nhau 10
-                          reservedSize: 30,
+                          interval: 10,
+                          reservedSize: 60,
                           getTitlesWidget: (value, meta) {
                             return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10));
                           },
                         ),
                       ),
                       topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      //Cột Y bên phải
-                      // rightTitles: AxisTitles(
-                      //   sideTitles: SideTitles(
-                      //     showTitles: true,
-                      //     reservedSize: 15, //chỉnh cột y bên phải qua trái/phải
-                      //     interval: 1, // mỗi mốc là 1tr
-                      //     getTitlesWidget: (value, meta) {
-                      //       return Text('${value.toInt()}tr', style: const TextStyle(fontSize: 12));
-                      //     },
-                      //   ),
-                      // ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     ),
                     borderData: FlBorderData(show: false),
+                    groupsSpace: 10,
                     barGroups: List.generate(customerCounts.length, (i) {
                       return BarChartGroupData(
                         x: i,
-                        barsSpace: 40,
                         barRods: [
                           BarChartRodData(
                             toY: customerCounts[i],
                             color: Colors.green.shade600,
-                            width: 15, //độ rộng cột
+                            width: 18,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ],
@@ -441,10 +437,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
                 LineChart(
                   LineChartData(
-                    minX: 0,
-                    maxX: 6,
                     minY: 0,
-                    maxY: maxY,
+                    maxY: 6,
                     gridData: FlGridData(show: false),
                     lineTouchData: LineTouchData(enabled: false),
                     titlesData: FlTitlesData(
@@ -454,10 +448,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       rightTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
+                          reservedSize: 25,
                           interval: 1,
-                          reservedSize: 30,
                           getTitlesWidget: (value, meta) {
-                            return Text('${value.toInt()}tr', style: const TextStyle(fontSize: 10));
+                            return Text(
+                              '${value.toInt()}tr',
+                              style: const TextStyle(fontSize: 10),
+                              textAlign: TextAlign.left,
+                            );
                           },
                         ),
                       ),
@@ -478,6 +476,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ],
             ),
           ),
+
 
           const SizedBox(height: 28),
 
@@ -529,18 +528,5 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ),
     );
   }
-
-  Widget _buildRevenueDetailItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
   }
-}
 
