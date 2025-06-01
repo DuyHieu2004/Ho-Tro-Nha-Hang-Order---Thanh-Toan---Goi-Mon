@@ -7,10 +7,23 @@ import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:doan_nhom_cuoiky/fileuploaddata/data.dart';
+import 'package:doan_nhom_cuoiky/screens/ReservationListScreen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // Khởi tạo đối tượng DataGenerator
+  final dataGenerator = DataGenerator();
+
+  // Dòng để XÓA TẤT CẢ DỮ LIỆU CŨ TRƯỚC KHI TẠO MỚI
+  // Nếu bạn chỉ muốn tạo dữ liệu một lần và không xóa, hãy giữ nguyên comment dòng này sau lần chạy đầu tiên.
+  // await dataGenerator.clearAllData(); // Bỏ comment dòng này để xóa dữ liệu cũ
+
+  // Dòng để KHỞI TẠO DỮ LIỆU MẪU
+  // Dòng này sẽ đẩy dữ liệu mẫu lên Firestore.
+  // Nếu bạn đã có dữ liệu và không muốn ghi đè (chỉ muốn thêm mới những cái chưa tồn tại),
+  //await dataGenerator.generateAllData(); // Bỏ comment dòng này để khởi tạo dữ liệu
+
   
   runApp(
     MultiProvider(
@@ -141,7 +154,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: settingProvider.themeMode,
-          home: const LogIn_Screen(),
+          home: ReservationListScreen(),
           routes: {
             '/settings': (context) => const SettingScreen(),
           },

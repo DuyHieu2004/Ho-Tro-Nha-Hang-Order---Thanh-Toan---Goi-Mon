@@ -125,114 +125,124 @@ class DataGenerator {
       final CollectionReference nhanVienCollection = FirebaseFirestore.instance.collection('NhanVien');
       List<NhanVien> nhanViens = [
         NhanVien(
-          id: "NV001",
+          id: "NV001", // Thêm tham số id này
           ma: "NV001",
-          ten: "Nguyen Van A",
+          ten: "Nguyễn Văn A",
           SDT: "0901234567",
           CCCD: "123456789",
           tk: "nva@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "QL001", ten: "Quản lý"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/0000FF/FFFFFF?text=A", // Example image
+          ngayVL: Timestamp.fromDate(DateTime(2023, 1, 15)), // Example date
         ),
         NhanVien(
           id: "NV002",
           ma: "NV002",
-          ten: "Tran Thi B",
+          ten: "Trần Thị B",
           SDT: "0901234568",
           CCCD: "123456790",
           tk: "ttb@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "TN001", ten: "Thu ngân"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/FF0000/FFFFFF?text=B",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 2, 20)),
         ),
         NhanVien(
           id: "NV003",
           ma: "NV003",
-          ten: "Le Van C",
+          ten: "Lê Văn C",
           SDT: "0901234569",
           CCCD: "123456791",
           tk: "lvc@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "PV001", ten: "Phục vụ"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/00FF00/FFFFFF?text=C",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 3, 10)),
         ),
         NhanVien(
           id: "NV004",
           ma: "NV004",
-          ten: "Pham Thi D",
+          ten: "Phạm Thị D",
           SDT: "0901234570",
           CCCD: "123456792",
           tk: "ptd@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "QL002", ten: "Quản lý"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/FFFF00/000000?text=D",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 4, 5)),
         ),
         NhanVien(
           id: "NV005",
           ma: "NV005",
-          ten: "Hoang Van E",
+          ten: "Hoàng Văn E",
           SDT: "0901234571",
           CCCD: "123456793",
           tk: "hve@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "TN002", ten: "Thu ngân"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/00FFFF/000000?text=E",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 5, 1)),
         ),
         NhanVien(
           id: "NV006",
           ma: "NV006",
-          ten: "Nguyen Thi F",
+          ten: "Nguyễn Thị F",
           SDT: "0901234572",
           CCCD: "123456794",
           tk: "ntf@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "PV002", ten: "Phục vụ"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/FF00FF/FFFFFF?text=F",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 6, 12)),
         ),
         NhanVien(
           id: "NV007",
           ma: "NV007",
-          ten: "Tran Van G",
+          ten: "Trần Văn G",
           SDT: "0901234573",
           CCCD: "123456795",
           tk: "tvg@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "QL003", ten: "Quản lý"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/800000/FFFFFF?text=G",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 7, 7)),
         ),
         NhanVien(
           id: "NV008",
           ma: "NV008",
-          ten: "Le Thi H",
+          ten: "Lê Thị H",
           SDT: "0901234574",
           CCCD: "123456796",
           tk: "lth@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "TN003", ten: "Thu ngân"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/008000/FFFFFF?text=H",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 8, 18)),
         ),
         NhanVien(
           id: "NV009",
           ma: "NV009",
-          ten: "Pham Van I",
+          ten: "Phạm Văn I",
           SDT: "0901234575",
           CCCD: "123456797",
           tk: "pvi@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "PV003", ten: "Phục vụ"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/000080/FFFFFF?text=I",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 9, 23)),
         ),
         NhanVien(
-          id: "NV0010",
+          id: "NV010",
           ma: "NV010",
-          ten: "Hoang Thi K",
+          ten: "Hoàng Thị K",
           SDT: "0901234576",
           CCCD: "123456798",
           tk: "htk@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "QL004", ten: "Quản lý"),
-          anh: null,
+          anh: "https://via.placeholder.com/150/808000/FFFFFF?text=K",
+          ngayVL: Timestamp.fromDate(DateTime(2023, 10, 30)),
         ),
       ];
 
@@ -240,8 +250,12 @@ class DataGenerator {
       for (var nhanVien in nhanViens) {
         bool exists = await documentExists('NhanVien', nhanVien.ma!);
         if (!exists) {
+          // Lưu doc với ID là nhanVien.ma
           await nhanVienCollection.doc(nhanVien.ma).set(nhanVien.toMap());
+          print("Đã đẩy NhanVien: ${nhanVien.ten} (${nhanVien.ma}) lên Firebase!");
           count++;
+        } else {
+          print("NhanVien: ${nhanVien.ten} (${nhanVien.ma}) đã tồn tại, bỏ qua.");
         }
       }
       print("Đã đẩy $count dữ liệu mẫu mới cho NhanVien!");
@@ -632,7 +646,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD001", 
           nhanVien: NhanVien(
-            id: "NV001",
             ma: "NV001",
             ten: "Nguyen Van A",
             SDT: "0901234567",
@@ -649,7 +662,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD002", 
           nhanVien: NhanVien(
-            id: "NV002",
             ma: "NV002",
             ten: "Tran Thi B",
             SDT: "0901234568",
@@ -666,7 +678,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD003", 
           nhanVien: NhanVien(
-            id: "NV003",
             ma: "NV003",
             ten: "Le Van C",
             SDT: "0901234569",
@@ -683,7 +694,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD004", 
           nhanVien: NhanVien(
-            id: "NV004",
             ma: "NV004",
             ten: "Pham Thi D",
             SDT: "0901234570",
@@ -700,8 +710,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD005", 
           nhanVien: NhanVien(
-  
-            id: "NV005",
             ma: "NV005",
             ten: "Hoang Van E",
             SDT: "0901234571",
@@ -718,7 +726,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD006", 
           nhanVien: NhanVien(
-            id: "NV006",
             ma: "NV006",
             ten: "Nguyen Thi F",
             SDT: "0901234572",
@@ -735,7 +742,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD007", 
           nhanVien: NhanVien(
-            id: "NV007",
             ma: "NV007",
             ten: "Tran Van G",
             SDT: "0901234573",
@@ -752,7 +758,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD008", 
           nhanVien: NhanVien(
-            id: "NV008",
             ma: "NV008",
             ten: "Le Thi H",
             SDT: "0901234574",
@@ -769,7 +774,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD009", 
           nhanVien: NhanVien(
-            id: "NV009",
             ma: "NV009",
             ten: "Pham Van I",
             SDT: "0901234575",
@@ -786,7 +790,6 @@ class DataGenerator {
         HoaDon(
           ma: "HD010", 
           nhanVien: NhanVien(
-            id: "NV0010",
             ma: "NV010",
             ten: "Hoang Thi K",
             SDT: "0901234576",
@@ -857,7 +860,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD001",
             nhanVien: NhanVien(
-              id: "NV001",
               ma: "NV001",
               ten: "Nguyen Van A",
               SDT: "0901234567",
@@ -878,7 +880,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD002",
             nhanVien: NhanVien(
-              id: "NV002",
               ma: "NV002",
               ten: "Tran Thi B",
               SDT: "0901234568",
@@ -899,7 +900,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD003",
             nhanVien: NhanVien(
-              id: "NV003",
               ma: "NV003",
               ten: "Le Van C",
               SDT: "0901234569",
@@ -920,7 +920,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD004",
             nhanVien: NhanVien(
-              id: "NV004",
               ma: "NV004",
               ten: "Pham Thi D",
               SDT: "0901234570",
@@ -941,7 +940,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD005",
             nhanVien: NhanVien(
-              id: "NV005",
               ma: "NV005",
               ten: "Hoang Van E",
               SDT: "0901234571",
@@ -962,7 +960,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD006",
             nhanVien: NhanVien(
-              id: "NV005",
               ma: "NV006",
               ten: "Nguyen Thi F",
               SDT: "0901234572",
@@ -983,7 +980,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD007",
             nhanVien: NhanVien(
-              id: "NV007",
               ma: "NV007",
               ten: "Tran Van G",
               SDT: "0901234573",
@@ -1004,7 +1000,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD008",
             nhanVien: NhanVien(
-              id: "NV008",
               ma: "NV008",
               ten: "Le Thi H",
               SDT: "0901234574",
@@ -1025,7 +1020,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD009",
             nhanVien: NhanVien(
-              id: "NV009",
               ma: "NV009",
               ten: "Pham Van I",
               SDT: "0901234575",
@@ -1046,7 +1040,6 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD010",
             nhanVien: NhanVien(
-              id: "NV010",
               ma: "NV010",
               ten: "Hoang Thi K",
               SDT: "0901234576",

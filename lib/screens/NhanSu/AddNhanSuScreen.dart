@@ -16,7 +16,6 @@ class AddNhanSuScreen extends StatefulWidget {
 }
 
 class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
-  TextEditingController id = TextEditingController();
   TextEditingController ma = TextEditingController();
   TextEditingController ten = TextEditingController();
   TextEditingController sdt = TextEditingController();
@@ -90,7 +89,6 @@ class _AddNhanSuScreenState extends State<AddNhanSuScreen> {
 
         VaiTro vaiTro = VaiTro.fromString(selectedVaiTro);
         NhanVien nv = NhanVien(
-          id: id.text,
           ma: ma.text,
           ten: ten.text,
           SDT: sdt.text,

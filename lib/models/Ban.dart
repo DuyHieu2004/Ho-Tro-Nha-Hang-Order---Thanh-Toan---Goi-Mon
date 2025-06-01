@@ -63,13 +63,4 @@ class Ban {
       _trangThai = trangThai;
     }
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is Ban && other.ma == _ma;
-  }
-
-  @override
-  int get hashCode => _ma.hashCode;
 }

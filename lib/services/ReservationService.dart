@@ -3,86 +3,83 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doan_nhom_cuoiky/models/Ban.dart';
 import 'package:doan_nhom_cuoiky/models/DonGoiMon.dart';
 import 'package:doan_nhom_cuoiky/models/ChiTietGoiMon.dart';
-import 'package:doan_nhom_cuoiky/models/MonAn.dart'; // Đảm bảo import MonAn nếu bạn dùng nó trong ChiTietGoiMon
+import 'package:doan_nhom_cuoiky/models/MonAn.dart';
 
 class ReservationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<List<DonGoiMon>> getReservationsForDate(DateTime date) {
     DateTime startOfDay = DateTime(date.year, date.month, date.day);
-    DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+    print('Truy vấn đặt chỗ từ ${startOfDay.toIso8601String()} đến ${endOfDay.toIso8601String()}');
 
     return _firestore
-        .collection('DonGoiMon') // Sửa 'donGoiMon' thành 'DonGoiMon'
-        .where('ngayLap', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay)) // Chuyển sang Timestamp
-        .where('ngayLap', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay)) // Chuyển sang Timestamp
+        .collection('DonGoiMon')
+        .where('NgayLap', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay)) // Đảm bảo key 'NgayLap'
+        .where('NgayLap', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay)) // Đảm bảo key 'NgayLap'
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => DonGoiMon.fromMap(doc.data() as Map<String, dynamic>))
-            .toList());
+        .map((snapshot) {
+          print('Số lượng tài liệu DonGoiMon nhận được: ${snapshot.docs.length}');
+          if (snapshot.docs.isEmpty) {
+            print('Không tìm thấy đơn đặt chỗ nào cho ngày này.');
+          }
+          return snapshot.docs
+              .map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                print('Dữ liệu thô DonGoiMon từ Firestore (${doc.id}): $data');
+                try {
+                  return DonGoiMon.fromMap(data);
+                } catch (e) {
+                  print('Lỗi chuyển đổi DonGoiMon (${doc.id}): $e, Dữ liệu: $data');
+                  return DonGoiMon(ma: doc.id);
+                }
+              })
+              .toList();
+        });
   }
 
   Stream<List<Ban>> getAvailableTables() {
-    // print('Đang lấy dữ liệu bàn từ Firestore...'); // Có thể bỏ comment này
-    return _firestore.collection('Ban').snapshots().map((snapshot) { // Sửa 'ban' thành 'Ban'
-      // print('Số lượng tài liệu bàn nhận được từ Firestore: ${snapshot.docs.length}'); // Có thể bỏ comment này
-      if (snapshot.docs.isEmpty) {
-        // print('Không có tài liệu nào trong collection "Ban".'); // Có thể bỏ comment này
-      }
-      return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        // print('Dữ liệu thô từ Firestore cho bàn ${doc.id}: $data'); // Có thể bỏ comment này
-        try {
-          final ban = Ban.fromMap(data);
-          // print('Đã chuyển đổi Ban thành công: ${ban.ma} - ${ban.trangThai}'); // Có thể bỏ comment này
-          return ban;
-        } catch (e) {
-          print('Lỗi chuyển đổi dữ liệu bàn ${doc.id} thành Ban: $e, Dữ liệu: $data');
-          rethrow; // Ném lại lỗi để có thể bắt ở lớp UI
-        }
-      }).toList();
-    });
+    // Phương thức này lấy TẤT CẢ các bàn, logic lọc sẽ ở lớp UI (CreateReservationScreen)
+    return _firestore.collection('Ban').snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => Ban.fromMap(doc.data() as Map<String, dynamic>)).toList());
   }
 
   Future<void> addReservation(DonGoiMon donGoiMon, List<ChiTietGoiMon> chiTietGoiMonList) async {
     try {
-      // print("Bắt đầu thêm đơn đặt chỗ..."); // Có thể bỏ comment này
+      print("Bắt đầu thêm đơn đặt chỗ...");
+      DocumentReference docRef = await _firestore.collection('DonGoiMon').add(donGoiMon.toMap());
+      print("Đã thêm DonGoiMon với ID tạm: ${docRef.id}");
 
-      // Thêm DonGoiMon và lấy DocumentReference để cập nhật mã
-      DocumentReference docRef = await _firestore.collection('DonGoiMon').add(donGoiMon.toMap()); // Sửa 'donGoiMon' thành 'DonGoiMon'
-
-      // Cập nhật trường 'ma' của DonGoiMon bằng ID tự động của Firestore
-      await docRef.update({'ma': docRef.id});
-      donGoiMon.ma = docRef.id; // Cập nhật lại đối tượng DonGoiMon trong bộ nhớ
-
-      // print("Đã thêm DonGoiMon với ID: ${docRef.id}"); // Có thể bỏ comment này
+      await docRef.update({'Ma': docRef.id});
+      donGoiMon.ma = docRef.id;
+      print("Đã cập nhật mã DonGoiMon: ${donGoiMon.ma}");
 
       for (var chiTiet in chiTietGoiMonList) {
-        // Đảm bảo ChiTietGoiMon.toMap() bao gồm cả MonAn.toMap()
-        await docRef.collection('ChiTietGoiMon').add(chiTiet.toMap()); // Sửa 'chiTietGoiMon' thành 'ChiTietGoiMon'
-        // print("Đã thêm chi tiết món ăn: ${chiTiet.getMonAn?.getTen}"); // Có thể bỏ comment này
+        await docRef.collection('ChiTietGoiMon').add(chiTiet.toMap());
+        print("Đã thêm chi tiết món ăn: ${chiTiet.getMonAn?.getTen}");
       }
-      // print("Đã thêm tất cả chi tiết món ăn."); // Có thể bỏ comment này
+      print("Đã thêm tất cả chi tiết món ăn.");
 
-      // Cập nhật trạng thái bàn
+      // Cập nhật trạng thái bàn thành "Đã đặt"
       if (donGoiMon.maBan != null && donGoiMon.maBan!.ma != null) {
-        await _firestore.collection('Ban').doc(donGoiMon.maBan!.ma).update({'trangThai': 'Đã đặt'}); // Sửa 'ban' thành 'Ban'
-        // print("Đã cập nhật trạng thái bàn ${donGoiMon.maBan!.ma} thành Đã đặt."); // Có thể bỏ comment này
+        await _firestore.collection('Ban').doc(donGoiMon.maBan!.ma).update({'TrangThai': 'Đã đặt'}); // Sửa thành 'TrangThai' (PascalCase)
+        print("Đã cập nhật trạng thái bàn ${donGoiMon.maBan!.ma} thành Đã đặt.");
       } else {
-        // print("Không có bàn được chọn để cập nhật trạng thái."); // Có thể bỏ comment này
+        print("Không có bàn được chọn để cập nhật trạng thái.");
       }
-      // print("Hoàn tất thêm đơn đặt chỗ thành công."); // Có thể bỏ comment này
+      print("Hoàn tất thêm đơn đặt chỗ thành công.");
     } catch (e) {
-      print("Lỗi cụ thể khi thêm đơn đặt chỗ: $e");
+      print("Lỗi cụ thể khi thêm đơn đặt chỗ trong ReservationService: $e");
       rethrow;
     }
   }
 
   Future<void> cancelReservation(String donGoiMonMa, String? banMa) async {
     try {
-      await _firestore.collection('DonGoiMon').doc(donGoiMonMa).update({'trangThai': 'Hủy'}); // Sửa 'donGoiMon' thành 'DonGoiMon'
+      await _firestore.collection('DonGoiMon').doc(donGoiMonMa).update({'TrangThai': 'Hủy'});
       if (banMa != null) {
-        await _firestore.collection('Ban').doc(banMa).update({'trangThai': 'Trống'}); // Sửa 'ban' thành 'Ban'
+        await _firestore.collection('Ban').doc(banMa).update({'TrangThai': 'Trống'});
       }
     } catch (e) {
       print("Lỗi khi hủy đơn đặt chỗ: $e");
@@ -92,9 +89,9 @@ class ReservationService {
 
   Stream<List<ChiTietGoiMon>> getChiTietGoiMonForDonGoiMon(String donGoiMonId) {
     return _firestore
-        .collection('DonGoiMon') // Sửa 'donGoiMon' thành 'DonGoiMon'
+        .collection('DonGoiMon')
         .doc(donGoiMonId)
-        .collection('ChiTietGoiMon') // Sửa 'chiTietGoiMon' thành 'ChiTietGoiMon'
+        .collection('ChiTietGoiMon')
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ChiTietGoiMon.fromMap(doc.data() as Map<String, dynamic>))

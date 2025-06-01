@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:doan_nhom_cuoiky/models/VaiTro.dart';
+import 'package:doan_nhom_cuoiky/models/VaiTro.dart'; // Đảm bảo VaiTro có toMap() và fromMap()
 
 class NhanVien {
   String? id;
@@ -12,56 +12,59 @@ class NhanVien {
   VaiTro? _vaiTro;
   String? _anh;
   Timestamp? ngayVL;
+
   // Constructors
   NhanVien({
-    required String? id,
+    this.id,
     required String? ma,
     required String? ten,
-    required String? SDT,
-    required String? CCCD,
+    String? SDT,
+    String? CCCD, 
     required String? tk,
     required String? mk,
-    required VaiTro? vaiTro,
-    required String? anh,
-    this.ngayVL
-  }) : _ma = ma,
-       _ten = ten,
-       _SDT = SDT,
-       _CCCD = CCCD,
-       _tk = tk,
-       _mk = mk,
-       _vaiTro = vaiTro,
-       _anh = anh;
+    VaiTro? vaiTro, 
+    String? anh, 
+    this.ngayVL,
+  })  : _ma = ma,
+        _ten = ten,
+        _SDT = SDT,
+        _CCCD = CCCD,
+        _tk = tk,
+        _mk = mk,
+        _vaiTro = vaiTro,
+        _anh = anh;
 
   // fromMap constructor
   NhanVien.fromMap(Map<String, dynamic> map) {
-    _ma = map['ma'];
-    _ten = map['ten'];
-    _SDT = map['SDT'];
-    _CCCD = map['CCCD'];
-    _tk = map['tk'];
-    _mk = map['mk'];
-    _vaiTro = map['vaiTro'] != null ? VaiTro.fromMap(map['vaiTro']) : null;
-    _anh = map['anh'];
-    ngayVL: map['NgayVL'] as Timestamp?;
+    id = map['Id']?.toString();
+    _ma = map['Ma']?.toString(); 
+    _ten = map['Ten']?.toString(); 
+    _SDT = map['SDT']?.toString(); 
+    _CCCD = map['CCCD']?.toString(); 
+    _tk = map['TaiKhoan']?.toString(); 
+    _mk = map['MatKhau']?.toString(); 
+    _vaiTro = map['VaiTro'] != null ? VaiTro.fromMap(map['VaiTro'] as Map<String, dynamic>) : null; 
+    _anh = map['Anh']?.toString(); 
+    ngayVL = map['NgayVL'] as Timestamp?; 
   }
 
   // toMap method
   Map<String, dynamic> toMap() {
     return {
-      'Ma': ma,
-      'Ten': ten,
-      'Anh': anh,
-      'CCCD': CCCD,
-      'VaiTro': vaiTro,
-      'MatKhau': mk,
-      'SDT': SDT,
-      'TaiKhoan': tk,
+      'Id': id, 
+      'Ma': _ma,
+      'Ten': _ten,
+      'SDT': _SDT,
+      'CCCD': _CCCD,
+      'TaiKhoan': _tk, 
+      'MatKhau': _mk, 
+      'VaiTro': _vaiTro?.toMap(), 
+      'Anh': _anh,
       'NgayVL': ngayVL,
     };
   }
 
-  bool get isQuanLy => vaiTro == 'QL';
+  bool get isQuanLy => _vaiTro?.ten == 'Quản lý';
 
   // Getters
   String? get ma => _ma;
@@ -73,52 +76,13 @@ class NhanVien {
   VaiTro? get vaiTro => _vaiTro;
   String? get anh => _anh;
 
-  // Setters
-  set ma(String? ma) {
-    if (ma != null && ma.isNotEmpty) {
-      _ma = ma;
-    }
-  }
-
-  set ten(String? ten) {
-    if (ten != null && ten.isNotEmpty) {
-      _ten = ten;
-    }
-  }
-
-  set SDT(String? SDT) {
-    if (SDT != null && SDT.isNotEmpty) {
-      _SDT = SDT;
-    }
-  }
-
-  set CCCD(String? CCCD) {
-    if (CCCD != null && CCCD.isNotEmpty) {
-      _CCCD = CCCD;
-    }
-  }
-
-  set tk(String? tk) {
-    if (tk != null && tk.isNotEmpty) {
-      _tk = tk;
-    }
-  }
-
-  set mk(String? mk) {
-    if (mk != null && mk.isNotEmpty) {
-      _mk = mk;
-    }
-  }
-
-  set vaiTro(VaiTro? vaiTro) {
-    if (vaiTro != null) {
-      _vaiTro = vaiTro;
-    }
-  }
-
-  set anh(String? anh) {
-    if (anh != null && anh.isNotEmpty) {
-      _anh = anh;
-    }
-  }
+  // Setters 
+  set ma(String? value) => _ma = value;
+  set ten(String? value) => _ten = value;
+  set SDT(String? value) => _SDT = value;
+  set CCCD(String? value) => _CCCD = value;
+  set tk(String? value) => _tk = value;
+  set mk(String? value) => _mk = value;
+  set vaiTro(VaiTro? value) => _vaiTro = value;
+  set anh(String? value) => _anh = value;
 }

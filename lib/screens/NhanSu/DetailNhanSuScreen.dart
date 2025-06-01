@@ -20,7 +20,6 @@ class DetailNhanSu extends StatefulWidget {
 }
 
 class _DetailNhanSuState extends State<DetailNhanSu> {
-  late TextEditingController idController;
   late TextEditingController maController;
   late TextEditingController tenController;
   late TextEditingController sdtController;
@@ -102,7 +101,6 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
     final nhanSuProvider = Provider.of<NhanSuProvider>(context, listen: false);
     try {
       final updatedNhanVien = NhanVien(
-        id: idController.text,
         ma: maController.text,
         ten: tenController.text,
         SDT: sdtController.text,
