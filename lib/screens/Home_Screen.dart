@@ -1,3 +1,5 @@
+import 'package:doan_nhom_cuoiky/screens/ChangePassword_Screen.dart';
+import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/ThongKeScreen.dart';
 import 'package:doan_nhom_cuoiky/widgets/RoleBaseWidget.dart';
@@ -187,7 +189,7 @@ class _Home_Screen1State extends State<Home_Screen1> {
                   leading: const Icon(Icons.lock_outline, color: Colors.blue),
                   title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.w500)),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ChangePassword_Screen(),));
                   },
                 ),
                 isVisible: true
@@ -364,7 +366,9 @@ class _Home_Screen1State extends State<Home_Screen1> {
                         backgroundColor: Colors.brown.shade50,
                         iconColor: Colors.brown.shade200,
                         onPressed: () {
-                          print('Nhân sự được nhấn!');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => NhanSuScreen(),),
+                          );
                         },
                       ),
                       isVisible: _childrenVisibility[6],

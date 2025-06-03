@@ -134,11 +134,7 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
           content: 'Chào mừng bạn đến với ứng dụng.',
           isSuccess: true, // Đăng nhập thành công
         );
-        // Có thể chuyển đến trang chính của ứng dụng sau khi đăng nhập thành công
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => HomePage()), // Thay HomePage bằng trang chính của bạn
-        // );
+
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen1(),));
       }
     } on FirebaseAuthException catch (e) {

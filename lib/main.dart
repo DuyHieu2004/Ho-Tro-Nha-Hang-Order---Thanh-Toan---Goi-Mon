@@ -17,7 +17,7 @@ void main() async {
 
   // Dòng để XÓA TẤT CẢ DỮ LIỆU CŨ TRƯỚC KHI TẠO MỚI
   // Nếu bạn chỉ muốn tạo dữ liệu một lần và không xóa, hãy giữ nguyên comment dòng này sau lần chạy đầu tiên.
-  // await dataGenerator.clearAllData(); // Bỏ comment dòng này để xóa dữ liệu cũ
+   //await dataGenerator.clearAllData(); // Bỏ comment dòng này để xóa dữ liệu cũ
 
   // Dòng để KHỞI TẠO DỮ LIỆU MẪU
   // Dòng này sẽ đẩy dữ liệu mẫu lên Firestore.
