@@ -1,3 +1,5 @@
+import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
+import 'package:doan_nhom_cuoiky/screens/ThongKeScreen.dart';
 import 'package:doan_nhom_cuoiky/widgets/RoleBaseWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -342,7 +344,11 @@ class _Home_Screen1State extends State<Home_Screen1> {
                         backgroundColor: Colors.yellow.shade100,
                         iconColor: Colors.yellow.shade700,
                         onPressed: () {
-                          print('Thống kê được nhấn!');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ThongKeScreen(),
+                            ),
+                          );
                         },
                       ),
                       isVisible: _childrenVisibility[5],
@@ -374,7 +380,7 @@ class _Home_Screen1State extends State<Home_Screen1> {
                         backgroundColor: Colors.grey.shade200,
                         iconColor: Colors.grey.shade700,
                         onPressed: () {
-                          print('Cài đặt được nhấn!');
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingScreen(),));
                         },
                       ),
                       isVisible: _childrenVisibility[7],
