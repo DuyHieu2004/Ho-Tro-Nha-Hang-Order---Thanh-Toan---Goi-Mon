@@ -1,4 +1,5 @@
 import 'package:doan_nhom_cuoiky/screens/ChangePassword_Screen.dart';
+import 'package:doan_nhom_cuoiky/screens/GoiMonScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/ThongKeScreen.dart';
@@ -93,6 +94,7 @@ class _Home_Screen1State extends State<Home_Screen1> {
         _childrenVisibility[2] = true;
         _childrenVisibility[3] = true;
         _childrenVisibility[7] = true;
+        showManagementSection = true;
         break;
       case "Thu ngân":
         _childrenVisibility[0] = true;
@@ -283,7 +285,8 @@ class _Home_Screen1State extends State<Home_Screen1> {
                         backgroundColor: Colors.green.shade100,
                         iconColor: Colors.green.shade700,
                         onPressed: () {
-                          print('Gọi món được nhấn!');
+                         // print('Gọi món được nhấn!');
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => GoiMonScreen(),));
                         },
                       ),
                       isVisible: _childrenVisibility[0],
@@ -523,38 +526,38 @@ class _Home_Screen1State extends State<Home_Screen1> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  RoleBasedWidget(
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: _buildStatisticItem(
-                              label: 'Khách hàng',
-                              value: '21',
-                              icon: Icons.person_outline,
-                              iconBackgroundColor: Colors.purple.shade100,
-                              iconColor: Colors.purple.shade700,
-                              onPressed: () {
-                                // Xử lý khi nhấn Khách hàng
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildStatisticItem(
-                              label: 'Đặt chỗ',
-                              value: '21',
-                              icon: Icons.calendar_today_outlined,
-                              iconBackgroundColor: Colors.yellow.shade100,
-                              iconColor: Colors.yellow.shade700,
-                              onPressed: () {
-                                // Xử lý khi nhấn Đặt chỗ
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      isVisible: showStatsSection
-                  )
+                  // RoleBasedWidget(
+                  //     child: Row(
+                  //       children: <Widget>[
+                  //         Expanded(
+                  //           child: _buildStatisticItem(
+                  //             label: 'Khách hàng',
+                  //             value: '21',
+                  //             icon: Icons.person_outline,
+                  //             iconBackgroundColor: Colors.purple.shade100,
+                  //             iconColor: Colors.purple.shade700,
+                  //             onPressed: () {
+                  //               // Xử lý khi nhấn Khách hàng
+                  //             },
+                  //           ),
+                  //         ),
+                  //         const SizedBox(width: 16),
+                  //         Expanded(
+                  //           child: _buildStatisticItem(
+                  //             label: 'Đặt chỗ',
+                  //             value: '21',
+                  //             icon: Icons.calendar_today_outlined,
+                  //             iconBackgroundColor: Colors.yellow.shade100,
+                  //             iconColor: Colors.yellow.shade700,
+                  //             onPressed: () {
+                  //               // Xử lý khi nhấn Đặt chỗ
+                  //             },
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     isVisible: showStatsSection
+                  // )
                 ],
               ),
             ],
