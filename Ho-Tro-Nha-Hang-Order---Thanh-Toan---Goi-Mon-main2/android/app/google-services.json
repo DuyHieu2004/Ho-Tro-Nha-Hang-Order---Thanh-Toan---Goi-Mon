@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "395080290453",
+    "project_id": "nhom-86edd",
+    "storage_bucket": "nhom-86edd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:395080290453:android:ea9130f242564db1808b9c",
+        "android_client_info": {
+          "package_name": "com.example.doan_nhom_cuoiky"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0WlK9F6ujnFo5_ck3m3fQdSGu4uYH7yA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
