@@ -203,8 +203,13 @@ class NhanSuItemCard extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 50,
                     backgroundImage:
-                        const AssetImage('assets/images/default.png')
-                            as ImageProvider,
+                    (
+                          (nv?.anh != null && nv!.anh!.isNotEmpty)
+                        ? NetworkImage(nv!.anh!)
+                            :
+                        AssetImage('assets/images/default.png')
+
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -333,7 +338,9 @@ class NhanSuItemCard extends StatelessWidget {
         onTap: () => _showDetailDialog(context),
         leading: CircleAvatar(
           backgroundImage:
-              const AssetImage('assets/images/default.png') as ImageProvider,
+          ( nv!.anh != null && nv!.anh!.isNotEmpty
+              ? NetworkImage(nv!.anh!)
+              : const AssetImage('assets/images/default.png')) as ImageProvider,
         ),
         title: Text(
           nv?.ten ?? 'Không có tên',

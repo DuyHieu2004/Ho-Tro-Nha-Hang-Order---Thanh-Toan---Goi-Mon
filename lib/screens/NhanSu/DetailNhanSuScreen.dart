@@ -205,9 +205,12 @@ class _DetailNhanSuState extends State<DetailNhanSu> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundImage: _image != null
-                        ? FileImage(_image!)
-                        : (widget.nhanVien.anh != null && widget.nhanVien.anh!.isNotEmpty
+                    backgroundImage:
+                    // _image != null
+                    //     ? FileImage(_image!)
+                    //     :
+
+                    ( widget.nhanVien.anh != null && widget.nhanVien.anh!.isNotEmpty
                             ? NetworkImage(widget.nhanVien.anh!)
                             : const AssetImage('assets/images/default.png')) as ImageProvider,
                   ),

@@ -23,6 +23,7 @@ class HoaDonProvider extends ChangeNotifier {
     _loadHoaDon();
   }
 
+
   Future<void> updateHoaDon(HoaDon hoaDon) async {
     await _hoaDonService.updateHoaDon(hoaDon);
     int index = _hoaDons.indexWhere((element) => element.ma == hoaDon.ma);

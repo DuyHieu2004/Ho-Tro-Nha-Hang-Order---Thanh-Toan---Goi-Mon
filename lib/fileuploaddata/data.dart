@@ -149,15 +149,15 @@ class DataGenerator {
           ngayVL: Timestamp.fromDate(DateTime(2023, 2, 20)),
         ),
         NhanVien(
-          id: "NV003",
-          ma: "NV003",
+          id: "HF7jq9UbfcMnKOhuLe6XpKnPCeg1",
+          ma: "HF7jq9UbfcMnKOhuLe6XpKnPCeg1",
           ten: "Lê Văn C",
           SDT: "0901234569",
           CCCD: "123456791",
           tk: "lvc@example.com",
-          mk: "123",
+          mk: "lvc123",
           vaiTro: VaiTro(ma: "PV001", ten: "Phục vụ"),
-          anh: "https://via.placeholder.com/150/00FF00/FFFFFF?text=C",
+          anh: "https://firebasestorage.googleapis.com/v0/b/nhom-86edd.firebasestorage.app/o/AnhTaiKhoan%2FLeVanC.jpg?alt=media&token=75a91708-436c-4478-b700-4a5507a1d22b",
           ngayVL: Timestamp.fromDate(DateTime(2023, 3, 10)),
         ),
         NhanVien(
@@ -210,14 +210,14 @@ class DataGenerator {
         ),
         NhanVien(
           id: "wvVYlJe4NKPk7u9isxm2JUMluvx2",
-          ma: "NV008",
+          ma: "wvVYlJe4NKPk7u9isxm2JUMluvx2",
           ten: "Lê Thị H",
           SDT: "0901234574",
           CCCD: "123456796",
           tk: "lth@example.com",
           mk: "123",
           vaiTro: VaiTro(ma: "TN003", ten: "Thu ngân"),
-          anh: "https://via.placeholder.com/150/008000/FFFFFF?text=H",
+          anh: "https://firebasestorage.googleapis.com/v0/b/nhom-86edd.firebasestorage.app/o/AnhTaiKhoan%2FLeThiH.jpg?alt=media&token=192728b3-a507-4dea-bbe3-62b9e6ab80ef",
           ngayVL: Timestamp.fromDate(DateTime(2023, 8, 18)),
         ),
         NhanVien(
@@ -235,13 +235,13 @@ class DataGenerator {
         NhanVien(
           id: "XbjhOkB2zhTAkLUu0opB8GOahJ02",
           ma: "XbjhOkB2zhTAkLUu0opB8GOahJ02",
-          ten: "Hoàng Thị K",
+          ten: "Hoàng Van K",
           SDT: "0901234576",
           CCCD: "123456798",
           tk: "doanhieu.11052004@gmail.com",
           mk: "doanhieu123",
           vaiTro: VaiTro(ma: "QL004", ten: "Quản lý"),
-          anh: "https://via.placeholder.com/150/808000/FFFFFF?text=K",
+          anh: "https://firebasestorage.googleapis.com/v0/b/nhom-86edd.firebasestorage.app/o/AnhTaiKhoan%2FHoangVanK.jpg?alt=media&token=70943bf7-4117-424f-a1e0-e934cb775a3c",
           ngayVL: Timestamp.fromDate(DateTime(2023, 10, 30)),
         ),
       ];
@@ -900,7 +900,7 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD003",
             nhanVien: NhanVien(
-              ma: "NV003",
+              ma: "HF7jq9UbfcMnKOhuLe6XpKnPCeg1",
               ten: "Le Van C",
               SDT: "0901234569",
               CCCD: "123456791",
@@ -1000,7 +1000,7 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD008",
             nhanVien: NhanVien(
-              ma: "NV008",
+              ma: "wvVYlJe4NKPk7u9isxm2JUMluvx2",
               ten: "Le Thi H",
               SDT: "0901234574",
               CCCD: "123456796",
@@ -1040,12 +1040,12 @@ class DataGenerator {
           hoaDon: HoaDon(
             ma: "HD010",
             nhanVien: NhanVien(
-              ma: "NV010",
-              ten: "Hoang Thi K",
+              ma: "XbjhOkB2zhTAkLUu0opB8GOahJ02",
+              ten: "Hoang Van K",
               SDT: "0901234576",
               CCCD: "123456798",
-              tk: "htk@example.com",
-              mk: "123",
+              tk: "doanhieu.11052004@gmail.com",
+              mk: "doanhieu123",
               vaiTro: VaiTro(ma: "QL004", ten: "Quản lý"),
               anh: null,
             ),

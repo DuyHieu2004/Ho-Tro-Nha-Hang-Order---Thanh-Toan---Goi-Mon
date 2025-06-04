@@ -269,6 +269,8 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
 
                   // RẤT QUAN TRỌNG: Đảm bảo _selectedTable hiện tại vẫn nằm trong danh sách validTables.
                   // Nếu không, đặt lại _selectedTable thành null để tránh lỗi.
+
+
                   if (_selectedTable != null) {
                      final matchingTable = validTables.firstWhere(
                          (ban) => ban.ma == _selectedTable!.ma,
@@ -296,18 +298,18 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                     value: _selectedTable,
                     items: validTables.map((ban) { // Sử dụng validTables thay vì allTables
                       Color textColor = Colors.black;
-                      if (ban.trangThai == "Đã đặt") {
-                        textColor = Colors.red;
-                      } else if (ban.trangThai == "Đang phục vụ") {
-                        textColor = Colors.orange;
-                      } else { // Trống
-                        textColor = Colors.green;
-                      }
+                      // if (ban.trangThai == "Đã đặt") {
+                      //   textColor = Colors.red;
+                      // } else if (ban.trangThai == "Đang phục vụ") {
+                      //   textColor = Colors.orange;
+                      // } else { // Trống
+                      //   textColor = Colors.green;
+                      // }
 
                       return DropdownMenuItem<Ban>(
                         value: ban,
                         child: Text(
-                          '${ban.ma ?? 'N/A'} - ${ban.viTri ?? 'N/A'} (${ban.trangThai ?? 'N/A'})',
+                          "Vị trí: ${ban.viTri ?? 'N/A'} ",
                           style: TextStyle(color: textColor),
                         ),
                       );
@@ -342,6 +344,8 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                 ),
               const SizedBox(height: 10),
               TextFormField(
+
+                enabled: false,
                 controller: _advancePaymentController,
                 decoration: const InputDecoration(labelText: 'Tiền tạm ứng'),
                 keyboardType: TextInputType.number,

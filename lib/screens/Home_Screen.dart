@@ -2,6 +2,7 @@ import 'package:doan_nhom_cuoiky/screens/ChangePassword_Screen.dart';
 import 'package:doan_nhom_cuoiky/screens/NhanSu/NhanSuScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/SettingScreen.dart';
 import 'package:doan_nhom_cuoiky/screens/ThongKeScreen.dart';
+import 'package:doan_nhom_cuoiky/services/HoaDonSerivice.dart';
 import 'package:doan_nhom_cuoiky/widgets/RoleBaseWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,8 +29,19 @@ class _Home_Screen1State extends State<Home_Screen1> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  HoaDonService _hoaDonService = HoaDonService();
   List<bool> _childrenVisibility = List.filled(8, false);
 
+  late Future<int> _todayOrderCount;
+  late Future<double> _todayRevenue;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _todayOrderCount = _hoaDonService.getTodayHoaDonCount();
+    _todayRevenue =_hoaDonService.getTodayRevenue();
+    print(_todayRevenue);
+  }
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
@@ -63,6 +75,7 @@ class _Home_Screen1State extends State<Home_Screen1> {
     );
   }
 
+  int soDon =0;
   @override
   Widget build(BuildContext context) {
     _childrenVisibility = List.filled(8, false);
@@ -94,11 +107,13 @@ class _Home_Screen1State extends State<Home_Screen1> {
         showManagementSection = false;
     }
 
+    HoaDonService hoaDonService = HoaDonService();
+
 
     final now = DateTime.now();
     final formattedDate = DateFormat('dd/MM/yyyy').format(now);
     final String _tenNhanVien = widget.nhanVien?.ten ?? '';
-
+    final String? anh = widget.nhanVien?.anh;
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -137,9 +152,11 @@ class _Home_Screen1State extends State<Home_Screen1> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 30,
-                        backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                        backgroundImage: anh != null && anh.isNotEmpty
+                            ? NetworkImage(anh)
+                            : const NetworkImage('https://via.placeholder.com/150'),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
@@ -189,7 +206,10 @@ class _Home_Screen1State extends State<Home_Screen1> {
                   leading: const Icon(Icons.lock_outline, color: Colors.blue),
                   title: const Text('Đổi mật khẩu', style: TextStyle(fontWeight: FontWeight.w500)),
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => ChangePassword_Screen(),));
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder:
+                            (context) => ChangePassword_Screen(
+                              nhanVien: widget.nhanVien,),));
                   },
                 ),
                 isVisible: true
@@ -414,27 +434,89 @@ class _Home_Screen1State extends State<Home_Screen1> {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: _buildStatisticItem(
-                          label: 'Đơn',
-                          value: '2',
-                          icon: Icons.list_alt_outlined,
-                          iconBackgroundColor: Colors.pink.shade100,
-                          iconColor: Colors.pink.shade700,
-                          onPressed: () {
-                            // Xử lý khi nhấn Đơn
+                        child: FutureBuilder<int>(
+                          future: _todayOrderCount, // Sử dụng Future đã khởi tạo
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return _buildStatisticItem(
+                                label: 'Đơn',
+                                value: 'Đang tải...', // Hiển thị trạng thái tải
+                                icon: Icons.list_alt_outlined,
+                                iconBackgroundColor: Colors.pink.shade100,
+                                iconColor: Colors.pink.shade700,
+                                onPressed: () {},
+                              );
+                            } else if (snapshot.hasError) {
+                              return _buildStatisticItem(
+                                label: 'Đơn',
+                                value: 'Lỗi!', // Hiển thị lỗi nếu có
+                                icon: Icons.error_outline,
+                                iconBackgroundColor: Colors.red.shade100,
+                                iconColor: Colors.red.shade700,
+                                onPressed: () {},
+                              );
+                            } else {
+                              // Khi Future hoàn thành, hiển thị giá trị
+                              return _buildStatisticItem(
+                                label: 'Đơn',
+                                value: snapshot.data?.toString() ?? '0', // Chuyển int sang String
+                                icon: Icons.list_alt_outlined,
+                                iconBackgroundColor: Colors.pink.shade100,
+                                iconColor: Colors.pink.shade700,
+                                onPressed: () {
+                                  // Xử lý khi nhấn Đơn
+                                },
+                              );
+                            }
                           },
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _buildStatisticItem(
-                          label: 'Chi tiêu',
-                          value: '50',
-                          icon: Icons.attach_money_outlined,
-                          iconBackgroundColor: Colors.green.shade100,
-                          iconColor: Colors.green.shade700,
-                          onPressed: () {
-                            // Xử lý khi nhấn Chi tiêu
+                        // child: _buildStatisticItem(
+                        //   label: 'Doanh thu',
+                        //   value: '50',
+                        //   icon: Icons.attach_money_outlined,
+                        //   iconBackgroundColor: Colors.green.shade100,
+                        //   iconColor: Colors.green.shade700,
+                        //   onPressed: () {
+                        //     // Xử lý khi nhấn Chi tiêu
+                        //   },
+                        // ),
+                        child: FutureBuilder<double>(
+                          future: _todayRevenue, // Sử dụng Future đã khởi tạo
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return _buildStatisticItem(
+                                label: 'Doanh thu',
+                                value: 'Đang tải...', // Hiển thị trạng thái tải
+                                icon: Icons.list_alt_outlined,
+                                iconBackgroundColor: Colors.pink.shade100,
+                                iconColor: Colors.pink.shade700,
+                                onPressed: () {},
+                              );
+                            } else if (snapshot.hasError) {
+                              return _buildStatisticItem(
+                                label: 'Doanh thu',
+                                value: 'Lỗi!', // Hiển thị lỗi nếu có
+                                icon: Icons.error_outline,
+                                iconBackgroundColor: Colors.red.shade100,
+                                iconColor: Colors.red.shade700,
+                                onPressed: () {},
+                              );
+                            } else {
+                              // Khi Future hoàn thành, hiển thị giá trị
+                              return _buildStatisticItem(
+                                label: 'Doanh thu',
+                                value: snapshot.data?.toString() ?? '0', // Chuyển int sang String
+                                  icon: Icons.attach_money_outlined,
+                                  iconBackgroundColor: Colors.green.shade100,
+                                  iconColor: Colors.green.shade700,
+                                onPressed: () {
+                                  // Xử lý khi nhấn Đơn
+                                },
+                              );
+                            }
                           },
                         ),
                       ),
@@ -596,6 +678,7 @@ class _Home_Screen1State extends State<Home_Screen1> {
     );
   }
 
+
   Future<bool?> _showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog<bool>(
       context: context,
@@ -618,6 +701,8 @@ class _Home_Screen1State extends State<Home_Screen1> {
       },
     );
   }
+
+
 
   Widget _buildStatisticItem({
     required String label,

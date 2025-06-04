@@ -101,72 +101,84 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
 
   // Hàm xử lý đăng nhập với Firebase
   Future<void> _signInWithEmailAndPassword(BuildContext context) async {
-    try {
-      // Show a loading indicator,
-      showDialog(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 10),
-                Text("Đang đăng nhập..."),
-              ],
-            ),
-          );
-        },
-      );
-      final UserCredential userCredential = await _auth
-          .signInWithEmailAndPassword(
-            email:
-                _usernameController.text.trim(), // Sử dụng email làm username
-            password: _passwordController.text.trim(),
-          );
-
-      if (userCredential.user != null) {
-        // Close the loading dialog
-        Navigator.of(context).pop();
-        _showCustomAlertDialog(
-          context: context,
-          title: 'Đăng nhập thành công!',
-          content: 'Chào mừng bạn đến với ứng dụng.',
-          isSuccess: true, // Đăng nhập thành công
+    // 1. Hiển thị hộp thoại "Đang đăng nhập..." ngay lập tức
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Người dùng không thể đóng hộp thoại bằng cách chạm ra ngoài
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 10),
+              Text("Đang đăng nhập..."),
+            ],
+          ),
         );
+      },
+    );
 
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Home_Screen1(),));
-      }
+    NhanVien? loggedInNhanVien;
+    String? errorMessage; // Biến để lưu trữ thông báo lỗi
+
+    try {
+      String email = _usernameController.text.trim();
+      String password = _passwordController.text.trim();
+
+      // Thực hiện đăng nhập
+      loggedInNhanVien = await _authService.signInWithEmailAndPassword(email, password);
+
     } on FirebaseAuthException catch (e) {
-      // Đóng dialog trước khi hiển thị lỗi
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      // Xử lý lỗi đăng nhập (hiển thị thông báo lỗi cho người dùng)
-      String errorMessage = 'Có lỗi xảy ra khi đăng nhập.';
+      // Xử lý các lỗi cụ thể từ Firebase Authentication
       if (e.code == 'user-not-found') {
         errorMessage = 'Không tìm thấy người dùng với email này.';
       } else if (e.code == 'wrong-password') {
         errorMessage = 'Mật khẩu không đúng.';
       } else if (e.code == 'invalid-email') {
-        errorMessage = "Email không hợp lệ";
+        errorMessage = "Email không hợp lệ.";
+      } else {
+        errorMessage = 'Có lỗi xảy ra khi đăng nhập: ${e.message}';
       }
-      _showCustomAlertDialog(
-        context: context,
-        title: 'Lỗi đăng nhập',
-        content: errorMessage,
-        isSuccess: false, // Đăng nhập thất bại
-      );
     } catch (e) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      _showCustomAlertDialog(
-        context: context,
-        title: 'Lỗi',
-        content: 'Đã xảy ra lỗi: $e',
-        isSuccess: false, // Lỗi chung
+      // Xử lý các lỗi chung khác
+      errorMessage = 'Đã xảy ra lỗi không mong muốn: $e';
+    }
+
+    // 2. Chờ khoảng 2 giây để hiển thị thông báo "Đang đăng nhập..."
+    // Điều này đảm bảo người dùng thấy thông báo loading đủ lâu
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 3. Đóng hộp thoại "Đang đăng nhập..." sau khi đã chờ
+    // Kiểm tra canPop để tránh lỗi nếu dialog đã bị đóng bằng cách nào đó
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    // 4. Xử lý kết quả đăng nhập sau khi hộp thoại loading đã đóng
+    if (loggedInNhanVien != null) {
+      // Đăng nhập thành công:
+      // Chuyển hướng trực tiếp đến Home_Screen1 mà không hiển thị thêm dialog thành công
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Home_Screen1(nhanVien: loggedInNhanVien),
+        ),
       );
+    } else {
+      // Đăng nhập thất bại:
+      // Hiển thị thông báo lỗi bằng SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage ?? 'Đăng nhập không thành công. Vui lòng kiểm tra lại.'),
+        ),
+      );
+      // Nếu bạn vẫn muốn dùng _showCustomAlertDialog cho lỗi, bạn có thể gọi nó ở đây:
+      // _showCustomAlertDialog(
+      //   context: context,
+      //   title: 'Lỗi đăng nhập',
+      //   content: errorMessage ?? 'Đăng nhập không thành công.',
+      //   isSuccess: false,
+      // );
     }
   }
 
@@ -308,8 +320,8 @@ class _LogIn_ScreenState extends State<LogIn_Screen>
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           // Gọi hàm xử lý đăng nhập Firebase
-                          //_signInWithEmailAndPassword(context);
-                          _login();
+                          _signInWithEmailAndPassword(context);
+                          // _login();
                         }
                       },
                       style: ElevatedButton.styleFrom(

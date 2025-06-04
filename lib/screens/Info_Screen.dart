@@ -34,6 +34,7 @@ class _Info_ScreenState extends State<Info_Screen> {
   @override
   void initState() {
     super.initState();
+    _LoadDataIntoInfo();
   }
 
   @override
@@ -91,6 +92,15 @@ class _Info_ScreenState extends State<Info_Screen> {
   }
 
   Widget _buildProfileHeader() {
+    // Determine the image provider based on whether nhanVien.anh is null or empty
+    ImageProvider<Object> avatarImage;
+    if (widget.nhanVien?.anh != null && widget.nhanVien!.anh!.isNotEmpty) {
+      avatarImage = NetworkImage(widget.nhanVien!.anh!);
+    } else {
+      // Fallback to a transparent image or a solid color for the CircleAvatar
+      // If you want a person icon, you'd place it inside the CircleAvatar's child
+      avatarImage = const NetworkImage('https://via.placeholder.com/150/000000/FFFFFF?text='); // A transparent placeholder
+    }
     return Column(
       children: [
         Stack(
@@ -115,7 +125,12 @@ class _Info_ScreenState extends State<Info_Screen> {
                   ),
                 ],
               ),
-              child: Icon(Icons.person, size: 60, color: Colors.white),
+              child: ClipOval( // ClipOval ensures the image is perfectly circular
+                child: widget.nhanVien?.anh != null && widget.nhanVien!.anh!.isNotEmpty
+                    ? Image(image: avatarImage, fit: BoxFit.cover) // Display the network image
+                    : Icon(Icons.person, size: 60, color: Colors.white), // Display the person icon
+              ),
+
             ),
             Positioned(
               bottom: 0,
@@ -123,11 +138,11 @@ class _Info_ScreenState extends State<Info_Screen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: Colors.white, // Background for the camera icon
+                  shape: BoxShape.circle, // Make it circular
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 5,
                       spreadRadius: 1,
                     ),
@@ -135,7 +150,7 @@ class _Info_ScreenState extends State<Info_Screen> {
                 ),
                 child: Icon(Icons.camera_alt, size: 20, color: _primaryColor),
               ),
-            ),
+            )
           ],
         ),
         const SizedBox(height: 15),
@@ -310,4 +325,16 @@ class _Info_ScreenState extends State<Info_Screen> {
     );
   }
 
+  void _LoadDataIntoInfo() {
+    _tenNVController.text = widget.nhanVien?.ten ?? '';
+    _cccdController.text = widget.nhanVien?.CCCD ?? '';
+    _maController.text = widget.nhanVien?.ma ?? '';
+    _sdtController.text = widget.nhanVien?.SDT ?? '';
+    _ngayVLController.text =widget.nhanVien?.ngayVL != null
+        ? ' ${DateFormat('dd/MM/yyyy').format(widget.nhanVien!.ngayVL!.toDate())}'
+        : 'Chưa cập nhật';
+    _tkController.text = widget.nhanVien?.tk ?? '';
+    _mkController.text = widget.nhanVien?.mk ?? '';
+    _chucVuController.text = widget.nhanVien?.vaiTro?.ten! ?? '';
+  }
 }

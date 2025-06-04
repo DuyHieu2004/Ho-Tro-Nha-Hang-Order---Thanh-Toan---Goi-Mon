@@ -22,7 +22,7 @@ void main() async {
   // Dòng để KHỞI TẠO DỮ LIỆU MẪU
   // Dòng này sẽ đẩy dữ liệu mẫu lên Firestore.
   // Nếu bạn đã có dữ liệu và không muốn ghi đè (chỉ muốn thêm mới những cái chưa tồn tại),
-  await dataGenerator.generateAllData(); // Bỏ comment dòng này để khởi tạo dữ liệu
+ //await dataGenerator.generateAllData(); // Bỏ comment dòng này để khởi tạo dữ liệu
 
   
   runApp(
